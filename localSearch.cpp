@@ -15,15 +15,15 @@ using namespace std;
 int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
     int costo = 0;
     for (int i = 0; i<dim;i++){
-        for (int j = 0; j<dim;j++){
+        for (int j = i+1; j<dim;j++){
             // El costo es la * del valor de los flujos por la permutacion de las distancias 
             costo += flujo[dim*i+j] * dist[dim*(sol[i]-1) + (sol[j]-1)]; 
         }
     }
-    return costo;
+    return costo*2; //La matriz es simétrica
 }
 
-vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo){
+vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen = 100){
     
     vector<int> sol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -37,6 +37,7 @@ vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo){
     int mejorCosto = funCosto(dim,sol,dist,flujo);
     int costoActual,mejorCostoAnterior;
     vector<int> solAux(dim); //para realizar las pruebas con los vecinos
+    vector<int> mejorSolEncontrada(dim); //mantiene el mejor de la vecindad
     
     if (tipo == 1){ // Buscar primera solución que mejore
         
@@ -63,6 +64,90 @@ vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo){
         } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
     }
 
+    else if (tipo == 2){//Buscar la mejor solución de la vecindad
+        do{
+            mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
+            mejorSolEncontrada = sol;
+            for (int i = 0; i < dim; i++){
+                for (int j = i+1; j < dim; j++){
+                    solAux = sol; //probablemente haya una mejor manera que no involucre copiar el vector
+                    solAux[i] = sol[j];
+                    solAux[j] = sol[i]; //intercambiamos dos elementos
+                    /*Importante, hay que optimizar el cálculo del costo de los vecinos*/
+                    costoActual = funCosto(dim,solAux,dist,flujo);
+                    if (costoActual<mejorCosto){
+                        mejorCosto = costoActual; //se actualiza el mejor costo
+                        mejorSolEncontrada = solAux; //guarda la mejor solución del momento
+                    }
+                }
+            }
+            if (mejorCosto < mejorCostoAnterior){
+                sol = mejorSolEncontrada; //se mueve al mejor vecino
+            }
+        } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
+    }
+
+    else if (tipo == 3){ //Busca el mejor en un porcentaje dado, por si la vecindad es muy grande
+
+        int totalIter = 1;
+        for (int i = 1; i<=dim; i++){
+            totalIter *= i; //calcula cual es el espacio de la vecindad
+        }
+        int numIter = porcen * totalIter / 100; //division de enteros
+        int iterActual = 0; 
+        do{
+            mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
+            mejorSolEncontrada = sol;
+            for (int i = 0; i < dim; i++){
+                for (int j = i+1; j < dim; j++){
+                    solAux = sol; //probablemente haya una mejor manera que no involucre copiar el vector
+                    solAux[i] = sol[j];
+                    solAux[j] = sol[i]; //intercambiamos dos elementos
+                    /*Importante, hay que optimizar el cálculo del costo de los vecinos*/
+                    costoActual = funCosto(dim,solAux,dist,flujo);
+                    if (costoActual<mejorCosto){
+                        mejorCosto = costoActual; //se actualiza el mejor costo
+                        mejorSolEncontrada = solAux; //guarda la mejor solución del momento
+                    }
+                    iterActual++;
+                    if (iterActual >= numIter){
+                        break; //termina la busqueda
+                    }
+                }
+                if (iterActual >= numIter){
+                    break; //termina la busqueda
+                }
+            }
+            if (mejorCosto < mejorCostoAnterior){
+                sol = mejorSolEncontrada; //se mueve al mejor vecino
+            }
+        } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
+    }
+
+    else if (tipo == 4){ //elige un vecino aleatoriamente
+        srand (time(NULL)); //inicializa la semilla
+        int prim, seg;
+
+        do{
+            mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
+
+            prim = rand() % dim;
+            do{ // asegrarse que el segundo elemento sea distinto al primero
+                seg = rand() % dim;
+            }while(seg == prim);
+
+            solAux = sol; //probablemente haya una mejor manera que no involucre copiar el vector
+            solAux[prim] = sol[seg];
+            solAux[seg] = sol[prim]; //intercambiamos dos elementos
+            /*Importante, hay que optimizar el cálculo del costo de los vecinos*/
+            costoActual = funCosto(dim,solAux,dist,flujo);
+            if (costoActual<mejorCosto){
+                mejorCosto = costoActual; //se actualiza el mejor costo
+                sol = solAux; //guarda la mejor solución del momento
+            }
+        } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
+    }
+
     cout << mejorCosto << endl;
     return sol;
 }
@@ -75,6 +160,7 @@ int main (int argc, char* argv[]) {
     file >> dim;
     vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
     vector<int> loc(dim*dim); //matriz con las distancias de las localidades
+    vector<int> solucion(dim); //vector con la solución de la busqueda local
 
     //guardar la matriz de distancia
     for (int i = 0; i < dim; i++){ 
@@ -90,18 +176,8 @@ int main (int argc, char* argv[]) {
         }
     }
 
-    /*probar el almacenado de las matrices
-    for (int i = 0; i < dim; i++){ 
-        for (int j = 0; j < dim; j++) {
-            cout << loc[dim*i+j] << " ";
-        }
-        cout << endl;
-    }
-    */
-
     //mostrar la solución dada por localSearch
-    vector<int> solucion(dim);
-    solucion = localSearch(dim,loc,suc,1);
+    solucion = localSearch(dim,loc,suc,2);
 
     for (int i = 0; i < dim; i++){
         cout << solucion[i] << " ";
