@@ -11,7 +11,6 @@
 #include <random> //default_random_engine
 #include <chrono> //chrono::system_clock
 #include <cstdlib> // rand
-#include "localSearch.h"
 using namespace std;
 
 int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
@@ -25,7 +24,7 @@ int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
     return costo*2; //La matriz es simétrica
 }
 
-pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen){
+pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen =100){
     
     vector<int> sol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -151,7 +150,6 @@ pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo,
     return pairSol;
 }
 
-/*
 int main (int argc, char* argv[]) {
     
     ifstream file(argv[1]);
@@ -187,4 +185,4 @@ int main (int argc, char* argv[]) {
     
     
     return 0;
-} */
+}
