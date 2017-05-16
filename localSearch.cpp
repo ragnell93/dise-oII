@@ -5,11 +5,13 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <utility> //pair
 #include <iostream>
 #include <algorithm> //shuffle
 #include <random> //default_random_engine
 #include <chrono> //chrono::system_clock
 #include <cstdlib> // rand
+#include "localSearch.h"
 using namespace std;
 
 int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
@@ -23,7 +25,7 @@ int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
     return costo*2; //La matriz es simétrica
 }
 
-vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen = 100){
+pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen = 100){
     
     vector<int> sol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -89,10 +91,7 @@ vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, 
 
     else if (tipo == 3){ //Busca el mejor en un porcentaje dado, por si la vecindad es muy grande
 
-        int totalIter = 1;
-        for (int i = 1; i<=dim; i++){
-            totalIter *= i; //calcula cual es el espacio de la vecindad
-        }
+        int totalIter = dim * (dim + 1) / 2; //calcula el tamaño de la vecindad
         int numIter = porcen * totalIter / 100; //division de enteros
         int iterActual = 0; 
         do{
@@ -148,11 +147,11 @@ vector<int> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, 
         } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
     }
 
-    cout << mejorCosto << endl;
-    return sol;
+    pair <int,vector<int>> pairSol = make_pair (mejorCosto,sol);
+    return pairSol;
 }
 
-
+/*
 int main (int argc, char* argv[]) {
     
     ifstream file(argv[1]);
@@ -160,7 +159,7 @@ int main (int argc, char* argv[]) {
     file >> dim;
     vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
     vector<int> loc(dim*dim); //matriz con las distancias de las localidades
-    vector<int> solucion(dim); //vector con la solución de la busqueda local
+    pair <int,vector<int>> pairSol; //tiene el costo de la busqueda y la permutación
 
     //guardar la matriz de distancia
     for (int i = 0; i < dim; i++){ 
@@ -176,14 +175,16 @@ int main (int argc, char* argv[]) {
         }
     }
 
+
     //mostrar la solución dada por localSearch
-    solucion = localSearch(dim,loc,suc,2);
+    pairSol = localSearch(dim,loc,suc,2);
+    cout << pairSol.first << endl;
 
     for (int i = 0; i < dim; i++){
-        cout << solucion[i] << " ";
+        cout << pairSol.second[i] << " ";
     }
     cout << endl;
     
     
     return 0;
-}
+} */
