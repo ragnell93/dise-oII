@@ -25,7 +25,7 @@ int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
     return costo*2; //La matriz es simétrica
 }
 
-pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen = 100){
+pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen){
     
     vector<int> sol(dim);
     //inicializamos el vector con las localidades ordenadas

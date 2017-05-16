@@ -1,7 +1,10 @@
 #ifndef LOCALSEARCH_H
 #define LOCALSEARCH_H
 
-int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo);
-pair <int,vector<int>> localSearch(int dim, vector<int> dist, vector<int> flujo, int tipo, int porcen = 100);
+#include <vector>
+#include <utility>
+
+int funCosto(int dim,std::vector<int> sol,std::vector<int> dist, std::vector<int> flujo);
+std::pair <int,std::vector<int>> localSearch(int dim, std::vector<int> dist, std::vector<int> flujo, int tipo, int porcen = 100);
 
 #endif
