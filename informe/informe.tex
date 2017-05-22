@@ -1,0 +1,160 @@
+\documentclass{ci5652}
+\usepackage{graphicx,amssymb,amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage[USenglish]{babel}
+\usepackage{hyperref}
+\usepackage{subfigure}
+\usepackage{paralist}
+\usepackage{csvsimple}
+\usepackage{adjustbox}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+%----------------------- Macros and Definitions --------------------------
+
+% Add all additional macros here, do NOT include any additional files.
+
+% The environments theorem (Theorem), invar (Invariant), lemma (Lemma),
+% cor (Corollary), obs (Observation), conj (Conjecture), and prop
+% (Proposition) are already defined in the ci5652.cls file.
+
+%----------------------- Title -------------------------------------------
+
+\title{Estudio comparativo entre metaheurísticas de trayectoria y metaheurísticas poblacionales aplicadas al problema de asignación cuadratico QAP}
+
+\author{Jose Cipagauta 
+        \and
+        Antonio Alvarez}
+
+%------------------------------ Text -------------------------------------
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+\begin{abstract}
+Una descripción breve del paper.
+\end{abstract}
+
+\section{Introducción}
+El problema de asignación cuadrática es un problema combinatorio en el cual hay "n" localidades con distancias definidas entre ellas y almacenadas en una matriz D y "n" sucursales con flujos determinados en una matriz F. La idea es asignar cada sucursal a una localidad distinta tal que se minimice la siguiente ecuación: 
+
+\begin {equation*}
+\sum_{i=1}^{n} \sum_{j=1}^{n} f_{ij} d_{p(i)p(j)}
+\end {equation*}
+
+Para esto hay que hallar una permutación "p"  que lo haga posible \cite{1}. Dicha permutación expresa el orden de asignación de una localidad con respecto a las sucursales o viceversa.
+
+Este problema fue demostrado NP-completo por Sahni, S. y T. Gonzalez \cite{2} lo cual hace que sea infactible una búsqeda exhaustiva en el espacio de soluciones para n de tamaño moderado y grande por ser n! combinaciones posibles. En su lugar se usan algoritmos de aproximación que consigan una respuesta dentro de un margen de error dado y en un tiempo de cómputo razonable.
+
+Estos algoritmos de aproximación empiezan con una solución inicial y dependiendo de los criterios de selección presentes se va moviendo por el espacio de soluciones hasta que se cumple el criterio de parada y devuelve la mejor solución encontrada \cite{4}.
+
+Para este trabajo se utiliza la librería QAPLIB \cite{5} y en lo referente al resto del informe se tiene que en la sección 2 se exponen los detalles de la representación del problema y los detalles de la implementación de los algoritmos utilizados para la resolución de QAP, en la sección 3 se muestran los resultados obtenidos y en la sección 4 se hacen las conclusiones de este trabajo. 
+
+\section{Detalles de implementación}
+
+Las soluciones factibles se modelan como un arreglo de enteros de tamaño n con una permutación de los número del 1 al n (incluidos) donde n representa el número de localidades y sucursales. La operación de movimiento o vecindad se define como el intercambio de exactamente 2 elementos dentro del arreglo, por lo tanto la vecindad está formada por $n*(n+1)/2$ elementos distintos. La función objetivo es: $\sum_{i=1}^{n} \sum_{j=1}^{n} f_{ij} d_{p(i)p(j)}$  y una solución es considerada mejor que otra si al evaluarla con la función objetivo se obtiene un resultado menor. 
+
+Ahora pasamos a la implementación de los distintos algoritmos utilizados:
+
+\subsection{Búsqueda Local}
+
+Búsqueda local se usa como la heurística base con la cual se comparan las otras metaheurísticas. La idea de búsqueda local es ir eligiendo soluciones cada vez mejores en cada iteración hasta que no se consiga ninguna mejoría en la vecindad de la solución actual, situación que da por culminada la búsqueda y da como resultado un óptimo local dentro del espacio de soluciones.
+
+Para la solución inicial se optó por una solución aleatoria porque como explica Talbi, E. G. \cite{6} Con una vecindad de grandes dimensiones se mitiga el impacto que genera la elección de la solución inicial como es el caso de las instancias con más de 100 localidades y para las instancias pequeñas (menos de 30 localidades) el aumento en iteraciones del movimiento por el espacio de soluciones no muestra un impacto importante en el tiempo de cómputo cuando en promedio la evaluación de una instancia de 30 toma 0.12 segundos.
+
+Luego se decidió parametrizar búsqueda local de tal manera que pudiera operar bajo distintos criterios de selección de vecinos en cada iteración; estos criterios son: elegir el primer vecino encontrado que mejore la solución actual, elegir la mejor solución de la vecindad, elegir la mejor solución dentro de un porcentaje dado de la vecindad y elegir un vecino aleatorio.
+
+En los procesos de búsqueda en la vecindad se empieza la permutación ordenada de cada par de elementos dentro del arreglo de la solución de tal manera que se verifiquen todas las combinaciones posibles (excepto para la búsqueda aleatoria). 
+
+En la figura \ref{alg1} se presenta el pseudo-código para la búsqueda local propuesta. Nótese que f es la función objetivo
+
+\begin{algorithm}
+ \label{alg1}
+ \DontPrintSemicolon
+ \vspace*{0.1cm}
+ \KwIn{matrices con las distancias y flujos y tipo de selección dentro de la búsqueda}
+ \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
+ S = S0 \tcc* {escogiendo S0 aleatoriamente}
+ \Repeat {f(S) $\neq$  f(S')}{
+    Generar vecino S' según el tipo de búsqueda\;
+    \If {f(S') $\leq$ f(S)}{
+      S = S'\;
+    }
+ }
+ \KwRet{S}
+ \vspace*{0.1cm}
+ \caption{Busqueda Local}
+\end{algorithm}
+
+\subsection{Recocido simulado}
+ Se completa cuando se tengan bien ajustados los parámetros
+
+\section{Resultados}
+
+Las tablas \ref{tabla1} y \ref{tabla2} muestran los resultados de la evaluación de la función objetivo y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino).
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas búsquedas locales}\label{tabla1}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{resultadosLocal.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo de las distintas búsquedas locales}\label{tabla2}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{tiempoLocal.csv}
+\end{table}
+
+
+\section*{Conclusiones}
+
+Aquí concluyen.
+
+%---------------------------- Bibliography -------------------------------
+
+% Please add the contents of the .bbl file that you generate,  or add bibitem entries manually if you like.
+% The entries should be in alphabetical order
+\small
+\bibliographystyle{abbrv}
+
+\begin{thebibliography}{99}
+
+\bibitem{1}
+Burkard, R. et al.
+\newblock QAPLIB-A Quadratic Assignment Problem Library.
+\newblock 2002
+
+\bibitem{2}
+Sahni, S., and Gonzalez, T.
+\newblock P-complete approximation problems.
+\newblock {\em J. of ACM}, 23, 555–565. 1976
+
+\bibitem{3}
+Misevičius, A.
+\newblock A modified simulated annealing algorithm for the quadratic assignment problem
+\newblock {\em Informatica}, 14(4), 497-514. 2003
+
+\bibitem{5}
+Burkard, R. et al.
+\newblock Quadratic Assignment Problem Library.
+\newblock http://anjos.mgi.polymtl.ca/qaplib/ . 2002
+
+\bibitem{4}
+Talbi, E. G. 
+\newblock Metaheuristics: from design to implementation
+\newblock {\em John Wiley} 2009
+
+\bibitem{6}
+Ibid. 101
+
+
+
+
+
+\end{thebibliography}
+
+
+\newpage
+\section*{Apéndice}
+
+Bla.
+
+\end{document}
