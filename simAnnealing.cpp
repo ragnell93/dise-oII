@@ -37,14 +37,15 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
     solActual = sol;
     vector<int> solAux(dim); //para evaluar los vecinos
     int temp = 100000; //temperatura inicial, este es uno de los parámetros que hay que ajustar constantemente
-    int tempFinal = 10000; //temperatura final, otro parámetro que hay que ajustar
-    int cambioTemp = 0; // al llegar a cierto numero efectua el enfriamiento
+    int tempFinal = 1000; //temperatura final, otro parámetro que hay que ajustar
+    int cambioTemp; // al llegar a cierto numero efectua el enfriamiento
     int prim, seg, acepta;
     int difCostos; //almacena la diferencia de costos entre la sol actual y la candidata
     srand (time(NULL)); //inicializa la semilla
     
     while (temp > tempFinal){  
-        while (cambioTemp < 100){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
+        cambioTemp = 0;
+        while (cambioTemp < 10000){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
 
             prim = rand() % dim;
             do{ // asegurarse que el segundo elemento sea distinto al primero
@@ -69,7 +70,7 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
             }
             cambioTemp++;
         }
-        temp = 0.9*temp; //enfriamiento como función geométrica
+        temp = 0.95*temp; //enfriamiento como función geométrica
     }
     pair <int,vector<int>> pairSol = make_pair (funCosto(dim,sol,dist,flujo),sol);
     return pairSol;
@@ -98,7 +99,6 @@ int main (int argc, char* argv[]) {
             file >> loc[dim*i+j];
         }
     }
-
 
     //mostrar la solución dada por localSearch
     pairSol = simAnnealing(dim,loc,suc);
