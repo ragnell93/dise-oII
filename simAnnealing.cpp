@@ -45,7 +45,7 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
     
     while (temp > tempFinal){  
         cambioTemp = 0;
-        while (cambioTemp < 10000){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
+        while (cambioTemp < 1000){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
 
             prim = rand() % dim;
             do{ // asegurarse que el segundo elemento sea distinto al primero
@@ -65,11 +65,16 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
                     sol = solActual;
                 }
             }
-            else if (rand() < exp(-difCostos/temp)){ //acepta con probabilidad e^(difCosts/temp)
+            double al = (double)rand() / (double)RAND_MAX ;
+            if (al < exp(-difCostos/temp)){ //acepta con probabilidad e^(difCosts/temp)
                 solActual = solAux;
             }
             cambioTemp++;
         }
+        /*for (int i = 0; i < dim; i++){
+            cout << solActual[i] << " ";
+        }
+        cout << endl;*/
         temp = 0.95*temp; //enfriamiento como función geométrica
     }
     pair <int,vector<int>> pairSol = make_pair (funCosto(dim,sol,dist,flujo),sol);
@@ -100,7 +105,7 @@ int main (int argc, char* argv[]) {
         }
     }
 
-    //mostrar la solución dada por localSearch
+    //mostrar la solución dada por simulated Annealing
     pairSol = simAnnealing(dim,loc,suc);
     cout << pairSol.first << endl;
 
