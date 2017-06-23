@@ -38,18 +38,21 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
     vector<int> solAux(dim); //para evaluar los vecinos
     int temp = 100000; //temperatura inicial, este es uno de los parámetros que hay que ajustar constantemente
     int tempFinal = 1000; //temperatura final, otro parámetro que hay que ajustar
-    int cambioTemp; // al llegar a cierto numero efectua el enfriamiento
+    int sinCambio; // al llegar a cierto numero efectua el enfriamiento
     int prim, seg, acepta;
     int difCostos; //almacena la diferencia de costos entre la sol actual y la candidata
-    srand (time(NULL)); //inicializa la semilla
+    random_device rd; // obtener un número aleatorio de hardware
+    mt19937 eng(rd()); // semilla para el generador
+    uniform_int_distribution<> disInt(0,dim-1); // rango permitido en el movivimiento
+    uniform_real_distribution<> disReal(0,1); //necesario para la aceptación de una peor solución
     
     while (temp > tempFinal){  
-        cambioTemp = 0;
-        while (cambioTemp < 1000){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
+        sinCambio = 0;
+        while (sinCambio < 1000){ //este número también es para ajustar, puede usarse un preceso de enfriamiento más complicado
 
-            prim = rand() % dim;
+            prim = disInt(eng);
             do{ // asegurarse que el segundo elemento sea distinto al primero
-                seg = rand() % dim;
+                seg = disInt(eng);
             }while(seg == prim);
         
             solAux = solActual; //probablemente haya una mejor manera que no involucre copiar el vector
@@ -63,13 +66,14 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
                 if (funCosto(dim,solActual,dist,flujo) < funCosto(dim,sol,dist,flujo)){
                     //verifica si es la mejor respuesta encontrada hasta el momento
                     sol = solActual;
+                    sinCambio = 0; //reinicia el contador
                 }
             }
-            double al = (double)rand() / (double)RAND_MAX ;
-            if (al < exp(-difCostos/temp)){ //acepta con probabilidad e^(difCosts/temp)
+
+            if (disReal(eng) < exp(-difCostos/temp)){ //acepta con probabilidad e^(difCosts/temp)
                 solActual = solAux;
             }
-            cambioTemp++;
+            sinCambio++;
         }
         /*for (int i = 0; i < dim; i++){
             cout << solActual[i] << " ";
@@ -83,7 +87,8 @@ pair <int,vector<int>> simAnnealing(int dim, vector<int> dist, vector<int> flujo
 }
 
 int main (int argc, char* argv[]) {
-    
+  
+    clock_t startTime = clock();
     ifstream file(argv[1]);
     int dim;  //dimensiones de las matrices
     file >> dim;
@@ -114,6 +119,7 @@ int main (int argc, char* argv[]) {
     }
     cout << endl;
     
+    cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
     
     return 0;
 }

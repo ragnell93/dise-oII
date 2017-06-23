@@ -44,7 +44,7 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
         solActual[i-1] = i;
     }
 
-    vector<pair<int,int>> tabu(25); //lista con las permutaciones prohibidas. Es circular
+    vector<pair<int,int>> tabu(20); //lista con las permutaciones prohibidas. Es circular
     int contador = 0; //contador para ubicar cada nuevo par de posiciones en la lista tabú usando mod.
 
     //obtener una semilla basada en el tiempo
@@ -61,7 +61,7 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
     int mejorCostoVecindad; //mejor de la vecindad, no necesariamente tiene que mejorar la solución final.
     int primero, segundo; //indices del movimiento a agregar en la lista tabu.
 
-    while (sinMejoria < 100){ //condición de parada. Ajustar
+    while (sinMejoria < 1000){ //condición de parada. Ajustar
         mejorCostoVecindad = std::numeric_limits<int>::max(); //de tal manera que el primer vecino lo reemplace
         for (int i = 0; i < dim; i++){
             for (int j = i+1; j < dim; j++){
@@ -89,7 +89,7 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
             }
         }
         solActual = mejorVecindad; //se mueve al mejor vecino encontrado permitido
-        tabu[contador%25] = make_pair(primero,segundo); //lista circular que actualiza las entradas mas viejas
+        tabu[contador%20] = make_pair(primero,segundo); //lista circular que actualiza las entradas mas viejas
         contador++;
         sinMejoria++; 
     }
@@ -100,6 +100,7 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
 
 int main (int argc, char* argv[]) {
     
+    clock_t startTime = clock();
     ifstream file(argv[1]);
     int dim;  //dimensiones de las matrices
     file >> dim;
@@ -131,5 +132,7 @@ int main (int argc, char* argv[]) {
     }
     cout << endl;
     
+    cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
+
     return 0;
 }

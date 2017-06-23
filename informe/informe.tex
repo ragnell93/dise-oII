@@ -21,9 +21,7 @@
 
 \title{Estudio comparativo entre metaheurísticas de trayectoria y metaheurísticas poblacionales aplicadas al problema de asignación cuadratico QAP}
 
-\author{Jose Cipagauta 
-        \and
-        Antonio Alvarez}
+\author{Antonio Alvarez}
 
 %------------------------------ Text -------------------------------------
 
@@ -87,11 +85,103 @@ En la figura \ref{alg1} se presenta el pseudo-código para la búsqueda local pr
 \end{algorithm}
 
 \subsection{Recocido simulado}
- Se completa cuando se tengan bien ajustados los parámetros
+ 
+ El recocido simulado es una metaheurística propuesta en 1983 por S. Kirkpatrick et al. en su artículo "Optimization by Simulated Annealing" \cite{7}. Se toma como inspiración el proceso metalúrgico por el cual se calienta a altas temperaturas un metal y se enfría lentamente para formar estructuras cristalinas fuertes.
+ En su trabajo, Kirkpatrick hace un simil y establece que el proceso de calentamiento y enfriamiento es aplicable a la busqueda de soluciones para los problemas de optimización.
+
+Esta metaheurística establece que en una búsqueda de soluciones dentro del espacio se realiza una exploración en donde una solución es aceptada si mejora la actual o en caso contrario es aceptada con probabilidad $e^{\frac{f(s')-f(s)}{T}}$. Donde f es la función de costos, s' la solución que se está generando y evaluando, s la solución actual y T la temperatura actual.
+
+Por lo tanto, la idea es empezar con una temperatura inicial con la cual se pueda aceptar cualquier movimiento dentro del espacio de soluciones y así promover la diversificación. Luego, pasado cierto tiempo, que puede ser un número de iteraciones en que no hay mejoría o un número fijo, se enfría la temperatura y se repite la búsqueda en la nueva vecindad hasta que se llegue a una temperatura final. Con este esquema, ya cuando se llega a temperaturas bajas la tasa de aceptación debe ser menor que el principio de tal manera que se intensifique la búsqueda en una región específica, la cual debería contener el óptimo global.
+
+Cabe destacar que el proceso de enfriamiento puede llevarse a cabo con distintas funciones, las más comunes son la función geométrica $ T' = \alpha*T$, y logarítmica $Ti = \frac{T0}{log(i)}$. Donde mientras más lenta sea la tasa de decremento, más oportunidad se le da al algoritmo para explorar y poder conseguir el óptimo global.
+
+En este sentido los parámetros que hay que ajustar a las necesidades del problema son: una temperatura inicial que permita aceptar movimientos a cualquier vecino, una temperatura final en la cual ya no se acepten soluciones que empeoren la evaluación de la función de costos, cuántas iteraciones han de evaluarse en cada temperatura y cual es la función con la cual se enfría la temperatura una vez se llegue a un estado de equilibrio.
+
+En la figura \ref{alg2} se muestra el pseudo código del Recocido Simulado para este trabajo. Se estableció como temperatura inicial T0 = 100000, temperatura final Tf = 1000, número de iteraciones para conseguir el equilibrio = 1000 y tasa de enfriamiento = 0.95*T para todas las instancias.
+
+\begin{algorithm}
+ \label{alg2}
+ \DontPrintSemicolon
+ \vspace*{0.1cm}
+ \KwIn{matrices con las distancias y flujos}
+ \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
+ S = S0 \tcc* {escogiendo S0 aleatoriamente}
+ T = T0 \tcc* {temeratura inicial}
+ \While {T \textgreater Tf}{
+    \While {no pasen x iteraciones sin mejorías}{
+    Generar vecino S'\;
+    $\Delta E = f(S')-f(S)$\; 
+    \If {$\Delta E \leq 0$}{S = S'\;}
+    \Else {S = S' con probabilidad $e^{\frac{f(s')-f(s)}{T}}$\;}
+    }
+    $T = \alpha*T$\;
+ }
+ \KwRet{S}
+ \vspace*{0.1cm}
+ \caption{Recocido Simulado}
+\end{algorithm}
+
+\subsection{Búsqueda Tabú}
+
+La búsqueda tabú es una metaheurística propuesta por F. Glover en su trabajo "Tabu search: Part I" \cite{8}. Este método busca escapar de los óptimos locales permitiendo movimientos que empeoren la evaluación de la función de costos siempre que cumplan con un criterio de aspiración o que no esté en la lista tabú (lista de movimientos prohibidos). 
+
+En la versión más sencilla de búsqueda tabú, sólo se implementa la lista tabú; en ella se almacena los rasgos que caracterizan el movimiento que se hace el algoritmo en cada iteración de tal manera que al momento de aceptar peores soluciones no se entre en un ciclo por el cual se repitan movimientos. La naturaleza de las estructuras almacenadas en la lista tabú depende directamente del problema a resolver; para problemas combinatorios dicha lista puede almacenar las arista intercambiadas en un problema de grafos o las posiciones intercambiada en un arreglo de elementos.
+
+La búsqueda continúa hasta que se cumple un criterio de parada; entre ellos se encuentran parar la búsqueda luego una cantidad de iteraciones fijas o luego de que pase un número determinado sin mejorar la solución. Para este trabajo se utiliza la segunda.
+
+Existen otras versiones de búsqueda tabú que usan memorias a mediano y largo plazo con información referente a la cantidad de veces que se repite un patrón dado de las mejores soluciones. Esta información luego se utiliza en fases de intensificación en donde se limita la búsqueda a los candidates que presenten dichos patrones o en fases de diversificación en las cuales se aleja la búsqueda de dichos patrones. En este trabajo dichas memorias no son consideradas en favor a mantener una implementación sencilla con la cual se pueda ver el comportamiento de un algoritmo basado en lista de restricciones. 
+
+En la figura \ref{alg3} se muestra el pseudocódigo de la búsqueda tabú utilizada. Se divivió las instancias en 3 grupos divididos por tamaño (un grupo con las instancias < 30 sucursales, otro con instancias entre 30 y 70 y el último grupo con las instancias mayores a 70). Para todas las instancias se coloca como condición de parada el paso de 1000 iteraciones sin mejoría de los resultados; para las instancias pequeñas se usa una lista tabú de tamaño 15, para las medianas una de tamaño 50 y para las grandes 70 con excepción de tai256c que usa una lista tabú de tamaño 200.
+
+\begin{algorithm}
+ \label{alg3}
+ \DontPrintSemicolon
+ \vspace*{0.1cm}
+ \KwIn{matrices con las distancias y flujos}
+ \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
+ S = S0 \tcc* {escogiendo S0 aleatoriamente}
+ Inicializar la lista tabú \;
+ \While {no pasen x iteraciones sin mejorías}{
+    Conseguir el mejor vecino S' que no se encuentre en la lista tabú o que sea la mejor solución conseguida hasta el momento \tcc* {criterio de aspiración}
+    S = S' \;
+    Actualizar la lista tabú con el movimiento realizado
+ }
+ \KwRet{S}
+ \vspace*{0.1cm}
+ \caption{Búsqueda Tabú}
+\end{algorithm}
+
 
 \section{Resultados}
 
-Las tablas \ref{tabla1} y \ref{tabla2} muestran los resultados de la evaluación de la función objetivo y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino).
+Las tablas \ref{tabla1}, \ref{tabla2} y \ref{tabla3} muestran los resultados de la evaluación de la función objetivo, los porcentajes de error y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino) respectivamente.
+
+El error relativo muestra que la mayoria de las instancias seleccionadas para el experimento muestran una topología con pocas mesetas (puntos en los cuales se encuentran los óptimos locales), por lo que se puede aproximar a una buena solución (aquellas que están a no más de 5\% de error) con una búsqueda local que se enfoque en el mejor de la vecindad o el primer vecino que mejore. Sólo las instancias chr presentan errores mayores al 20\%.
+
+Con respecto al desempeño de los distintos tipos de búsqueda local, se muestra una notoria diferencia entre una búsqueda moviéndose por el mejor de la vecindad y por el primero que mejore la solución con respecto a una búsqueda aleatoria. Esta última presenta errores superiores al 15\% en la mayoria de sus instancias y con desempeños mediocres en las instancias chr, est36a y esc128, los cuales superan el 100\%.
+
+Comparando una búsqueda local que se mueve al mejor de la vecindad con una que se mueve al primero que mejore la solución, se muestra un mejor desempeño por parte de la segunda sobre la primera; en general se aprecia una diferencia de aproximadamente 2\% de error entre una y la otra, casos como chr15a muestran una acentuada diferencia con 10\% de error a favor de moverse al primer vecino que mejore la solución. Sin embargo hay casos como chr22a y esc128 que se inclinan a favor de una búsqueda basada en el mejor de la vecindad. NOTA: explicar por qué estos comportamientos.
+
+Al momento de comparar tiempos de cómputo, la búsqueda aleatoria muestra el mejor desempeño entre los 3 con tiempos que nunca llegan al segundo inclusive para la instancia más grande de 256 localidades. Por su parte, los dos otros métodos muestran un desempeño similar en tiempo para instancias pequeñas y medianas y se evidencia una diferencia es a partir de instancias grandes como lipa70a, donde se torna a favor de la búsqueda local moviéndose por el primer mejor vecino. Por lo tanto, se evidencia que a partir de instancias de 70 localidades la búsqueda considerando el primer mejor vecino empieza a mostrar ventaja.
+
+La marcada diferencia en tiempos de ejecucición entre la búsqueda aleatoria y el resto se debe a que es menos costoso ir generando un par de números aleatorios en cada iteración a tener que recorrer el arreglo de la solución cambiando cada par posible de posiciones. Por su parte, la diferencia entre la búsqueda del mejor de la vecindad y el primer mejor viene dado porque en la primera se debe examinar toda la vecindad, mientras que en la segunda se examina parcialmente; esta diferencia es menos notoria cuando las instancias son pequeñas y medianas (menor a 70 localidades) ya que una vecindad, como se reseñó anteriormente tiene $n*(n+1)/2$ candidatos.
+
+Tomando en consideración los errores relativos y los tiempos de cómputo se nota un mejor desempeño por la búsqueda local con el primer mejor sobre el resto al considerar que en las intancias grandes tarda menos en computar que una busqueda local considerando el mejor de la vecindad y que el error relativo es parecido y hasta mejor.
+
+Ahora pasando a los resultados de la evaluación de las distintas metaheurísticas se presentan los resultados de la evaluación de la función de costos, el porcentaje de error relativo y los tiempos de ejecución en las tablas \ref{tabla4}, \ref{tabla5} y \ref{tabla6}.
+
+Considerando primero las metaheurísticas de trayectoria se tiene que los porcentajes de error varían considerablemente entre instancias de distintos tamaños. Empezando con las instancias chr, se observa un contraste entre SA (Simmulated Anealing) y TS (Tabu Search); SA presenta 5\% y 12\% en las instancias chr12a y chr15a mientras que TS presenta 20\% y 38\%; en cambio, para chr20a, chr22a y chr25a SA muestra 98\%, 38\% y 180\%  mientras que SA muestra mejores resultados con 37\%, 15\% y 47\% respectivamente.
+Si tomamos en consideración un margen del 5\% como una respuesta aceptable sólo SA en chr12a alcanza esta meta, teniendo además una notable incapacidad por parte de SA de producir resultados satisfactorios en instancias como chr20a y chr25a.
+
+Sin embargo esta incapacidad de producir respuestas aceptables y con un comportamiento errático entre los dos métodos para las instancias chr no se extiende al resto de las series. Si se observa las intancias nug y sko, observamos que TA sí logra conseguir resultados menores al 5\% de error y mejores que los resultados de SA, que se encuentran alrededor del 15\%. Por su parte instancias como los de la serie lipa y tai muestran que tanto SA como TS pueden dar buenos resultados. Acotándose que en lipa es preferible utilizar TS sobre SA por obtener resultados un poco mejor (mientras los resultados de SA rondan el 3\% de error, los de TS rondan el 1\%).
+
+Ahora, ahondando en las instancias que presentaron el mejor y peor error para SA, tenemos la serie esc y la serie tai. En las tablas \ref{tabla7} y \ref{tabla8} se presentan la evaluación de la función objetivo y los porcentajes de error relativo praa SA y TS de las instacias Tai y en las tablas \ref{tabla9} y \ref{tabla10} para las instancias Esc.
+
+Observando las instancias Tai se muestra una ventaja por parte de SA sobre TS al ver que los resultados de SA no superan el 4\% mientras que los de TS se encuentran alrededor de 5\% con la instancia tai12a como peor resultado con 14\%. Por su parte, al evaluar las intancias Esc se tiene que para SA se obtienen errores altos, en especial en esc32a, esc32b y esc64a con 109\%, 105\% y 51\% mientras que TS presenta 24\%, 15\% y 2\%.
+
+Por otra parte, al evaluar los tiempos de cómputo se obtuvo una notable diferencia en tre SA y TS, principalmente en las instancias grandes. Para las instancias pequeñas (hasta 30 sucursales) los tiempos son parecidos, estando por debajo de los 10 segundos; pero a partir de ste36a TS supera los 15 segundos mientras que SA se mantiene por debajo de este límite hasta sko56. Una vez llegado a sko56 se marca aún más la diferencia al ver que SA computa en menos de 100 segundos hasta esc128 en el que tarda 130 segundos y TS aumenta progresivamente desde 100 a 1500 segundos. Cabe resaltar el tiempo utilizado para computar tai256c, en el cual SA tarda 587 segundos a diferencia de TS que toma 118953 segundos.
+
+Considerando el tiempo de cómputo y el error relativo TS muestra una clara ventaja sobre SA para las instancias probadas al obtener mejores resultados en tiempos comparables a SA; sin embargo SA es preferible en las intsancias grandes donde TS se tarda mucho más y la direfencia en errores no es más del 5\% como en el caso de tai256c, en el cual se produce resultados parecidos pero con una diferencia de horas en tiempo de cómputo.                              
 
 \begin{table}
 \csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas búsquedas locales}\label{tabla1}\begin{adjustbox}{max width=\columnwidth},
@@ -99,8 +189,49 @@ after reading=\end{adjustbox}]{resultadosLocal.csv}
 \end{table}
 
 \begin{table}
-\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo de las distintas búsquedas locales}\label{tabla2}\begin{adjustbox}{max width=\columnwidth},
+\csvautotabular[before reading=\caption{Porcentajes del error relativo de las distintas búsquedas locales}\label{tabla2}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{errorLocal.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo en segundos de las distintas búsquedas locales}\label{tabla3}\begin{adjustbox}{max width=\columnwidth},
 after reading=\end{adjustbox}]{tiempoLocal.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas metaheurísticas}\label{tabla4}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{resultados.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Porcentajes del error relativo de las distintas metaheurísticas}\label{tabla5}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{errores.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo en segundos de las distintas metaheurísticas}\label{tabla6}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{tiempos.csv}
+\end{table}
+
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla7}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{resultadosTai.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Porcentajes del error relativo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla8}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{erroresTai.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las instancias Esc para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla9}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{resultadosEsc.csv}
+\end{table}
+
+\begin{table}
+\csvautotabular[before reading=\caption{Porcentajes del error relativo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla10}\begin{adjustbox}{max width=\columnwidth},
+after reading=\end{adjustbox}]{erroresEsc.csv}
 \end{table}
 
 
@@ -134,7 +265,7 @@ Misevičius, A.
 
 \bibitem{5}
 Burkard, R. et al.
-\newblock Quadratic Assignment Problem Library.
+\newblock Quadratic Assignment Problem.
 \newblock http://anjos.mgi.polymtl.ca/qaplib/ . 2002
 
 \bibitem{4}
@@ -145,8 +276,15 @@ Talbi, E. G.
 \bibitem{6}
 Ibid. 101
 
+\bibitem{7}
+S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi. 
+\newblock Optimization by simulated annealing.
+\newblock {\em Science}, 220(4598):671–680, 1983.
 
-
+\bibitem{8}
+F. Glover. 
+\newblock Tabu search: Part I. 
+\newblock {\em ORSA Journal on Computing}, 1(3):190–206, 1989.
 
 
 \end{thebibliography}
