@@ -12,7 +12,12 @@
 #include <chrono> //chrono::system_clock
 #include <cstdlib> // rand
 #include <limits> //max
+#include <unistd.h>
+#include <csignal>
 using namespace std;
+
+sig_atomic_t volatile done = 0;
+void game_over(int) { done = 1; }
 
 int busquedaListaTabu(vector<pair<int,int>> tabu,int i, int j){
     //Busca si una permutación entre i y j es tabu
@@ -37,6 +42,10 @@ int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
 }
 
 pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
+
+    done = 0;
+    std::signal(SIGALRM, game_over);
+    alarm(10); // permite que el la busqueda tabú se realice por cierto tiempo
     
     vector<int> solActual(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -44,7 +53,7 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
         solActual[i-1] = i;
     }
 
-    vector<pair<int,int>> tabu(20); //lista con las permutaciones prohibidas. Es circular
+    vector<pair<int,int>> tabu(10); //lista con las permutaciones prohibidas. Es circular
     int contador = 0; //contador para ubicar cada nuevo par de posiciones en la lista tabú usando mod.
 
     //obtener una semilla basada en el tiempo
@@ -59,10 +68,11 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
     int costoAux; //costo de solAux
     int mejorCosto = funCosto(dim,mejorSol,dist,flujo);
     int mejorCostoVecindad; //mejor de la vecindad, no necesariamente tiene que mejorar la solución final.
-    int primero, segundo; //indices del movimiento a agregar en la lista tabu.
+    int primero, segundo, flag; //indices del movimiento a agregar en la lista tabu.
 
-    while (sinMejoria < 1000){ //condición de parada. Ajustar
+    while ((sinMejoria < 1000) & !done){ //condición de parada. Ajustar
         mejorCostoVecindad = std::numeric_limits<int>::max(); //de tal manera que el primer vecino lo reemplace
+        flag = 0;
         for (int i = 0; i < dim; i++){
             for (int j = i+1; j < dim; j++){
                 solAux = solActual; //probablemente haya una mejor manera que no involucre copiar el vector
@@ -78,8 +88,10 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
                     mejorCostoVecindad = costoAux;
                     primero = i;
                     segundo = j;
+                    flag = 1;
+                    break;
                 }
-                else if ((busquedaListaTabu == 0) && (costoAux < mejorCostoVecindad)){
+                else if ((busquedaListaTabu(tabu,i,j) == 0) && (costoAux < mejorCostoVecindad)){
                     //si el movimiento es permitido y es el mejor encontrado por el momento de la vecindad
                     mejorVecindad = solAux;
                     mejorCostoVecindad = costoAux; 
@@ -87,9 +99,10 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
                     segundo = j;
                 }
             }
+            if (flag == 1){break;}
         }
         solActual = mejorVecindad; //se mueve al mejor vecino encontrado permitido
-        tabu[contador%20] = make_pair(primero,segundo); //lista circular que actualiza las entradas mas viejas
+        tabu[contador%10] = make_pair(primero,segundo); //lista circular que actualiza las entradas mas viejas
         contador++;
         sinMejoria++; 
     }
@@ -100,39 +113,53 @@ pair <int,vector<int>> tabuSearch(int dim, vector<int> dist, vector<int> flujo){
 
 int main (int argc, char* argv[]) {
     
-    clock_t startTime = clock();
-    ifstream file(argv[1]);
-    int dim;  //dimensiones de las matrices
-    file >> dim;
-    vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
-    vector<int> loc(dim*dim); //matriz con las distancias de las localidades
-    pair <int,vector<int>> pairSol; //tiene el costo de la busqueda y la permutación
+    vector<int> resultados(10);
 
-    //guardar la matriz de distancia
-    for (int i = 0; i < dim; i++){ 
-        for (int j = 0; j < dim; j++) {
-            file >> suc[dim*i+j];
+    for (int i = 0; i < 10; i++){
+
+        clock_t startTime = clock();
+        ifstream file(argv[1]);
+        int dim;  //dimensiones de las matrices
+        file >> dim;
+        vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
+        vector<int> loc(dim*dim); //matriz con las distancias de las localidades
+        pair <int,vector<int>> pairSol; //tiene el costo de la busqueda y la permutación
+
+        //guardar la matriz de distancia
+        for (int i = 0; i < dim; i++){ 
+            for (int j = 0; j < dim; j++) {
+                file >> suc[dim*i+j];
+            }
         }
-    }
 
-    //guardar la matriz de flujos
-    for (int i = 0; i < dim; i++){ 
-        for (int j = 0; j < dim; j++) {
-            file >> loc[dim*i+j];
+        //guardar la matriz de flujos
+        for (int i = 0; i < dim; i++){ 
+            for (int j = 0; j < dim; j++) {
+                file >> loc[dim*i+j];
+            }
         }
+
+        //mostrar la solución dada por ltabuSearch
+        pairSol = tabuSearch(dim,loc,suc);
+        resultados[i] = pairSol.first;
+        
+        cout << pairSol.first << endl;
+
+        for (int i = 0; i < dim; i++){
+            cout << pairSol.second[i] << " ";
+        }
+        cout << endl;
+        
+        cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
+
     }
 
-
-    //mostrar la solución dada por localSearch
-    pairSol = tabuSearch(dim,loc,suc);
-    cout << pairSol.first << endl;
-
-    for (int i = 0; i < dim; i++){
-        cout << pairSol.second[i] << " ";
+    int total = 0;
+    for (int j = 0; j<10; j++){
+        total += resultados[j];
     }
-    cout << endl;
-    
-    cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
 
+    cout << endl << "El promedio de de las soluciones es: " <<endl;
+    cout << total/10 << endl;
     return 0;
 }

@@ -11,7 +11,12 @@
 #include <random> //default_random_engine
 #include <chrono> //chrono::system_clock
 #include <cstdlib> // rand
+#include <unistd.h>
+#include <csignal>
 using namespace std;
+
+sig_atomic_t volatile done = 0;
+void game_over(int) {done = 1; }
 
 int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
     int costo = 0;
@@ -25,6 +30,10 @@ int funCosto(int dim,vector<int> sol,vector<int> dist, vector<int> flujo){
 }
 
 pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int> flujo){
+
+    done = 0;
+    std::signal(SIGALRM, game_over);
+    alarm(2); // permite que el la busqueda tabú se realice por cierto tiempo
     
     vector<int> mejorSol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -50,8 +59,8 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
     uniform_int_distribution<> disInt(0,dim-1); // rango permitido en el movivimiento
     uniform_real_distribution<> disReal(0,1); //necesario para la aceptación de una peor solución
 
-    while (temp > tempFinal){
-        while (sinMejorias < 1000){
+    while ((temp > tempFinal) & !done){
+        while ((sinMejorias < 20) & !done){
             solAnterior = solActual;
             do{
                 mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
@@ -107,46 +116,61 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
 
             sinMejorias++;
         }
-        temp = temp*0.95;
+        sinMejorias = 0;
+        temp = temp*0.80;
     }
     pair <int,vector<int>> pairSol = make_pair (funCosto(dim,mejorSol,dist,flujo),mejorSol);
     return pairSol;
 }
 
 int main (int argc, char* argv[]) {
+
+    vector<int> resultados(10);
+
+    for (int i = 0; i < 10; i++){
     
-    clock_t startTime = clock();
-    ifstream file(argv[1]);
-    int dim;  //dimensiones de las matrices
-    file >> dim;
-    vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
-    vector<int> loc(dim*dim); //matriz con las distancias de las localidades
-    pair <int,vector<int>> pairSol; //tiene el costo de la busqueda y la permutación
+        clock_t startTime = clock();
+        ifstream file(argv[1]);
+        int dim;  //dimensiones de las matrices
+        file >> dim;
+        vector<int> suc(dim*dim); //matriz con los flujos entre las sucursales
+        vector<int> loc(dim*dim); //matriz con las distancias de las localidades
+        pair <int,vector<int>> pairSol; //tiene el costo de la busqueda y la permutación
 
-    //guardar la matriz de distancia
-    for (int i = 0; i < dim; i++){ 
-        for (int j = 0; j < dim; j++) {
-            file >> suc[dim*i+j];
+        //guardar la matriz de distancia
+        for (int i = 0; i < dim; i++){ 
+            for (int j = 0; j < dim; j++) {
+                file >> suc[dim*i+j];
+            }
         }
-    }
 
-    //guardar la matriz de flujos
-    for (int i = 0; i < dim; i++){ 
-        for (int j = 0; j < dim; j++) {
-            file >> loc[dim*i+j];
+        //guardar la matriz de flujos
+        for (int i = 0; i < dim; i++){ 
+            for (int j = 0; j < dim; j++) {
+                file >> loc[dim*i+j];
+            }
         }
+
+        //mostrar la solución dada por localSearch
+        pairSol = iteratedLocalSearch(dim,loc,suc);
+        resultados[i] = pairSol.first;
+        cout << pairSol.first << endl;
+
+        for (int i = 0; i < dim; i++){
+            cout << pairSol.second[i] << " ";
+        }
+        cout << endl;
+        
+        cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
     }
 
-    //mostrar la solución dada por localSearch
-    pairSol = iteratedLocalSearch(dim,loc,suc);
-    cout << pairSol.first << endl;
-
-    for (int i = 0; i < dim; i++){
-        cout << pairSol.second[i] << " ";
+    int total = 0;
+    for (int j = 0; j<10; j++){
+        total += resultados[j];
     }
-    cout << endl;
-    
-    cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " seconds." << endl;
+
+    cout << endl << "El promedio de de las soluciones es: " <<endl;
+    cout << total/10 << endl;
 
     return 0;
 }

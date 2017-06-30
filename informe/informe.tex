@@ -34,7 +34,8 @@ Una descripción breve del paper.
 \end{abstract}
 
 \section{Introducción}
-El problema de asignación cuadrática es un problema combinatorio en el cual hay "n" localidades con distancias definidas entre ellas y almacenadas en una matriz D y "n" sucursales con flujos determinados en una matriz F. La idea es asignar cada sucursal a una localidad distinta tal que se minimice la siguiente ecuación: 
+
+El problema de asignación cuadrática (QAP por sus siglas en inglés) es un problema combinatorio en el cual hay "n" localidades con distancias definidas entre ellas y almacenadas en una matriz D y "n" sucursales con flujos determinados en una matriz F. La idea es asignar cada sucursal a una localidad distinta tal que se minimice la siguiente ecuación: 
 
 \begin {equation*}
 \sum_{i=1}^{n} \sum_{j=1}^{n} f_{ij} d_{p(i)p(j)}
@@ -46,13 +47,23 @@ Este problema fue demostrado NP-completo por Sahni, S. y T. Gonzalez \cite{2} lo
 
 Estos algoritmos de aproximación empiezan con una solución inicial y dependiendo de los criterios de selección presentes se va moviendo por el espacio de soluciones hasta que se cumple el criterio de parada y devuelve la mejor solución encontrada \cite{4}.
 
-Para este trabajo se utiliza la librería QAPLIB \cite{5} y en lo referente al resto del informe se tiene que en la sección 2 se exponen los detalles de la representación del problema y los detalles de la implementación de los algoritmos utilizados para la resolución de QAP, en la sección 3 se muestran los resultados obtenidos y en la sección 4 se hacen las conclusiones de este trabajo. 
+Este problema ha sido base para distintas investigaciones buscando proponer técnicas y optimizaciones con las cuales se pueda hallar los óptimos globales para las distintas instancias. Entre dichas investigaciones se encuentran la realizada por Li, Y. en "Heuristic and exact algorithms for the quadratic assignment problem" \cite{12} donde plantea mejoras a partir de reducciones realizadas a las matrices de flujos y distacias, aporta nuevas cotas con la construcción de un algortimo "branch \& bound" basado en la optimización de las matrices, muestra una nueva versión de búsqueda local con una nueva estructura de vecindad y diseña un algoritmo genético que incluye un nuevo operador de cruce que muestra ser efectivo al combinarse con "local hill-climbing".
 
-\section{Detalles de implementación}
+Otro trabajo es el de Karisch, S. "Nonlinear approaches for the quadratic assignment and graph partition problems" \cite{11}. Donde logra dar las cotas inferiores más bajas para muchos de los problemas pequeños de la librería a través de la utilización de enfoques no lineales. Por su parte Johnson, T. en "New linear programming-based solution procedures for the quadratic assignment problem" \cite{13}. Plantea procedimientos basados en la programación lineal que van a servir como base a las formulaciones de otros investigadores para resolver QAP.
+
+Este trabajo busca comparar el desempeño tanto en precisión como en tiempo de cómputo de 5 metaheurísticas distintas al buscar él óptimo global para instancias de este problema ; éstas son Recocido Simulado (SA), Búsqueda Tabú (TS), Búsqueda Local Iterada (ILS), Algoritmo genético (GA) y Colonia de Hormigas (AC). El objetivo es determinar cual de estos métodos es el más efectivo al momento de buscar una buena solución al problema de asignación cuadrática.
+
+Al existir un extenso repertorio de metaheurísticas que está en constante expansión, se torna difícil elegir un método a utilizar para la resolución del problema planteado; más aún cuando las carcterísticas de dicho problema afectan el desempeño del método. Por lo tanto existe una constante necesidad de probar las distintas metaheurísticas con cada problema de optimización planteado para determinar su comportamiento ante los mismos. De esta manera, este trabajo espera probar las 5 mencionadas anteriormente y definir, en base a los resultados, cual de ellas se adapta mejor a QAP.
+
+En lo que concierne al resto del informe se tiene la descripción de las 5 metaheurísticas utilizadas y la especificación de sus parámetros en la sección de metodología con el fin de dejar sentadas las bases con las cuales se realizó el experimeto. La sección de resultados presenta las tablas con los promedios de 10 corridas para cada método probado con distintas instancias y un boxplot por cada método para mostrar el desempeño general del mismo. Luego se presenta el análisis de los resultados, donde  se destacan los puntos resaltantes del experimento que conlleven a la determinación del mejor método sobre los demás y finalmente se encuentran las conclusiónes donde se generaliza lo ya destacado en el análisis de resultados y se determinan los aportes realizados.
+
+\section{Metodología}
 
 Las soluciones factibles se modelan como un arreglo de enteros de tamaño n con una permutación de los número del 1 al n (incluidos) donde n representa el número de localidades y sucursales. La operación de movimiento o vecindad se define como el intercambio de exactamente 2 elementos dentro del arreglo, por lo tanto la vecindad está formada por $n*(n+1)/2$ elementos distintos. La función objetivo es: $\sum_{i=1}^{n} \sum_{j=1}^{n} f_{ij} d_{p(i)p(j)}$  y una solución es considerada mejor que otra si al evaluarla con la función objetivo se obtiene un resultado menor. 
 
-Ahora pasamos a la implementación de los distintos algoritmos utilizados:
+Para este trabajo se utiliza la librería QAPLIB \cite{5}. Las instancias seleccionadas son las de la serie Chr que representan valores para árboles y grafos completos; la serie Esc que se basan en la prueba de circuitos; Sko con matrices cuyos números son generados aleatoriamente; la serie a de Tai que son generados uniformemente y son simétricas y Wil cuyas distancias son rectangulares.  Cada instancia es probada 10 veces y se reporta el promedio de la evaluación de la función objetivo y tiempo de cada corrida. Las pruebas realizadas fueron hechas con un procesador Intel Celeron N3160, 2GB de RAM usando una versión de 32-bit de Ubuntu 14.04.5.
+
+Ahora se procede a la implementación de los distintos algoritmos utilizados:
 
 \subsection{Búsqueda Local}
 
@@ -89,7 +100,7 @@ En la figura \ref{alg1} se presenta el pseudo-código para la búsqueda local pr
  El recocido simulado es una metaheurística propuesta en 1983 por S. Kirkpatrick et al. en su artículo "Optimization by Simulated Annealing" \cite{7}. Se toma como inspiración el proceso metalúrgico por el cual se calienta a altas temperaturas un metal y se enfría lentamente para formar estructuras cristalinas fuertes.
  En su trabajo, Kirkpatrick hace un simil y establece que el proceso de calentamiento y enfriamiento es aplicable a la busqueda de soluciones para los problemas de optimización.
 
-Esta metaheurística establece que en una búsqueda de soluciones dentro del espacio se realiza una exploración en donde una solución es aceptada si mejora la actual o en caso contrario es aceptada con probabilidad $e^{\frac{f(s')-f(s)}{T}}$. Donde f es la función de costos, s' la solución que se está generando y evaluando, s la solución actual y T la temperatura actual.
+Esta metaheurística establece que en una búsqueda de soluciones dentro del espacio se realiza una exploración en donde una solución es aceptada si mejora la actual o en caso contrario es aceptada con probabilidad $e^{\frac{-(f(s')-f(s))}{T}}$. Donde f es la función de costos, s' la solución que se está generando y evaluando, s la solución actual y T la temperatura actual.
 
 Por lo tanto, la idea es empezar con una temperatura inicial con la cual se pueda aceptar cualquier movimiento dentro del espacio de soluciones y así promover la diversificación. Luego, pasado cierto tiempo, que puede ser un número de iteraciones en que no hay mejoría o un número fijo, se enfría la temperatura y se repite la búsqueda en la nueva vecindad hasta que se llegue a una temperatura final. Con este esquema, ya cuando se llega a temperaturas bajas la tasa de aceptación debe ser menor que el principio de tal manera que se intensifique la búsqueda en una región específica, la cual debería contener el óptimo global.
 
@@ -106,15 +117,16 @@ En la figura \ref{alg2} se muestra el pseudo código del Recocido Simulado para 
  \KwIn{matrices con las distancias y flujos}
  \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
  S = S0 \tcc* {escogiendo S0 aleatoriamente}
- T = T0 \tcc* {temeratura inicial}
+ T = 100000 \tcc* {temeratura inicial}
+ Tf = 1000 \tcc* {temperatura final}
  \While {T \textgreater Tf}{
-    \While {no pasen x iteraciones sin mejorías}{
+    \While {no pasen 1000 iteraciones sin mejorías}{
     Generar vecino S'\;
     $\Delta E = f(S')-f(S)$\; 
     \If {$\Delta E \leq 0$}{S = S'\;}
-    \Else {S = S' con probabilidad $e^{\frac{f(s')-f(s)}{T}}$\;}
+    \Else {S = S' con probabilidad $e^{\frac{-(f(s')-f(s))}{T}}$\;}
     }
-    $T = \alpha*T$\;
+    $T = 0.95*T$\;
  }
  \KwRet{S}
  \vspace*{0.1cm}
@@ -125,13 +137,13 @@ En la figura \ref{alg2} se muestra el pseudo código del Recocido Simulado para 
 
 La búsqueda tabú es una metaheurística propuesta por F. Glover en su trabajo "Tabu search: Part I" \cite{8}. Este método busca escapar de los óptimos locales permitiendo movimientos que empeoren la evaluación de la función de costos siempre que cumplan con un criterio de aspiración o que no esté en la lista tabú (lista de movimientos prohibidos). 
 
-En la versión más sencilla de búsqueda tabú, sólo se implementa la lista tabú; en ella se almacena los rasgos que caracterizan el movimiento que se hace el algoritmo en cada iteración de tal manera que al momento de aceptar peores soluciones no se entre en un ciclo por el cual se repitan movimientos. La naturaleza de las estructuras almacenadas en la lista tabú depende directamente del problema a resolver; para problemas combinatorios dicha lista puede almacenar las arista intercambiadas en un problema de grafos o las posiciones intercambiada en un arreglo de elementos.
+En la versión más sencilla de búsqueda tabú, sólo se implementa la lista tabú; en ella se almacena los rasgos que caracterizan el movimiento que hace el algoritmo en cada iteración de tal manera que al momento de aceptar peores soluciones no se entre en un ciclo por el cual se repitan movimientos. La naturaleza de las estructuras almacenadas en la lista tabú depende directamente del problema a resolver; para problemas combinatorios dicha lista puede almacenar las arista intercambiadas en un problema de grafos o las posiciones intercambiada en un arreglo de elementos.
 
 La búsqueda continúa hasta que se cumple un criterio de parada; entre ellos se encuentran parar la búsqueda luego una cantidad de iteraciones fijas o luego de que pase un número determinado sin mejorar la solución. Para este trabajo se utiliza la segunda.
 
-Existen otras versiones de búsqueda tabú que usan memorias a mediano y largo plazo con información referente a la cantidad de veces que se repite un patrón dado de las mejores soluciones. Esta información luego se utiliza en fases de intensificación en donde se limita la búsqueda a los candidates que presenten dichos patrones o en fases de diversificación en las cuales se aleja la búsqueda de dichos patrones. En este trabajo dichas memorias no son consideradas en favor a mantener una implementación sencilla con la cual se pueda ver el comportamiento de un algoritmo basado en lista de restricciones. 
+Existen otras versiones de búsqueda tabú que usan memorias a mediano y largo plazo con información referente a la cantidad de veces que se repite un patrón dado de las mejores soluciones. Esta información luego se utiliza en fases de intensificación en donde se limita la búsqueda a los candidatos que presenten dichos patrones o en fases de diversificación en las cuales se aleja la búsqueda de los patrones. En este trabajo dichas memorias no son consideradas en favor a mantener una implementación sencilla con la cual se pueda ver el comportamiento de un algoritmo basado en una lista de restricciones. 
 
-En la figura \ref{alg3} se muestra el pseudocódigo de la búsqueda tabú utilizada. Se divivió las instancias en 3 grupos divididos por tamaño (un grupo con las instancias < 30 sucursales, otro con instancias entre 30 y 70 y el último grupo con las instancias mayores a 70). Para todas las instancias se coloca como condición de parada el paso de 1000 iteraciones sin mejoría de los resultados; para las instancias pequeñas se usa una lista tabú de tamaño 15, para las medianas una de tamaño 50 y para las grandes 70 con excepción de tai256c que usa una lista tabú de tamaño 200.
+En la figura \ref{alg3} se muestra el pseudocódigo de la búsqueda tabú utilizada. Para todas las instancias se coloca como condición de parada el paso de 1000 iteraciones sin mejoría de los resultados y una lista tabú de tamaño 10.
 
 \begin{algorithm}
  \label{alg3}
@@ -141,7 +153,7 @@ En la figura \ref{alg3} se muestra el pseudocódigo de la búsqueda tabú utiliz
  \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
  S = S0 \tcc* {escogiendo S0 aleatoriamente}
  Inicializar la lista tabú \;
- \While {no pasen x iteraciones sin mejorías}{
+ \While {no pasen 1000 iteraciones sin mejorías}{
     Conseguir el mejor vecino S' que no se encuentre en la lista tabú o que sea la mejor solución conseguida hasta el momento \tcc* {criterio de aspiración}
     S = S' \;
     Actualizar la lista tabú con el movimiento realizado
@@ -151,37 +163,96 @@ En la figura \ref{alg3} se muestra el pseudocódigo de la búsqueda tabú utiliz
  \caption{Búsqueda Tabú}
 \end{algorithm}
 
+\subsection{Búsqueda Local Iterada}
 
-\section{Resultados}
+La búsqueda Local Iterada (ILS por sus siglas en inglés) parte de una idea sencilla; conseguir un óptimo local utilizando algún método, perturbar la solución obtenida y repetir el método utilizado para conseguir el óptimo local con el objetivo de conseguir una mejor solución. Este proceso se repite hasta que se cumpla un criterio de parada y se reporta la mejor solución encontrada.
 
-Las tablas \ref{tabla1}, \ref{tabla2} y \ref{tabla3} muestran los resultados de la evaluación de la función objetivo, los porcentajes de error y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino) respectivamente.
+ILS está conformado por 4 componentes que entonar para conseguir la configuración óptima que se adapte al problema en cuestión \cite{9}. Estos son: la solución inicial de la búsqueda, la perturbación realizada sobre el óptimo local encontrado en cada iteración, el criterio de aceptación de los óptimos conseguidos periódicamente y el método utilizado dentro del ciclo para conseguir óptimos locales.
 
-El error relativo muestra que la mayoria de las instancias seleccionadas para el experimento muestran una topología con pocas mesetas (puntos en los cuales se encuentran los óptimos locales), por lo que se puede aproximar a una buena solución (aquellas que están a no más de 5\% de error) con una búsqueda local que se enfoque en el mejor de la vecindad o el primer vecino que mejore. Sólo las instancias chr presentan errores mayores al 20\%.
+La solución inicial puede ser aleatoria o resultado de un algoritmo ávido; la ventaja de esta última opción involucran una menor cantidad de iteraciones utilizadas por ILS para converger a una solución (salvo en casos específicos en donde la topología juega en contra de obtener mejores resultados a partir de buenas soluciones iniciales) y en algunos problemas puede conllevar a una mejor respuesta final. Sin embargo, si obtener una respuesta por parte de un algoritmo ávido es especialmente costoso se tiende a optar por una solución aleatoria.
 
-Con respecto al desempeño de los distintos tipos de búsqueda local, se muestra una notoria diferencia entre una búsqueda moviéndose por el mejor de la vecindad y por el primero que mejore la solución con respecto a una búsqueda aleatoria. Esta última presenta errores superiores al 15\% en la mayoria de sus instancias y con desempeños mediocres en las instancias chr, est36a y esc128, los cuales superan el 100\%.
+Con respecto a la perturbación realizada a la solución obtenida se debe realizar en una medida que le permita escapar del óptimo local en el que se encuentra pero no ser un cambio tan drástico que se pierda todas las características que conforman la respuesta que está perturbando. La idea detrás de esto es conseguir un óptimo local, el cual debe poseer algún rasgo que comparta con el óptimo global y al conservarlo se pueda explorar el espacio de soluciones de manera más efectiva que si se empezara una busqueda aleatoria en cada fase del algoritmo. Un ejemplo de una perturbación moderada para TSP es el cambio de 4 aristas por otras nuevas \cite{9}. El cambio es díficil de deshacer como para regresar a la combinación original y además conserva el resto de la trayectoria original; por lo que si la solución original es buena, la nueva también lo será.
 
-Comparando una búsqueda local que se mueve al mejor de la vecindad con una que se mueve al primero que mejore la solución, se muestra un mejor desempeño por parte de la segunda sobre la primera; en general se aprecia una diferencia de aproximadamente 2\% de error entre una y la otra, casos como chr15a muestran una acentuada diferencia con 10\% de error a favor de moverse al primer vecino que mejore la solución. Sin embargo hay casos como chr22a y esc128 que se inclinan a favor de una búsqueda basada en el mejor de la vecindad. NOTA: explicar por qué estos comportamientos.
+Por su parte, el criterio de aceptación determina cuál solución producida en cada iteración es aceptada como el punto de partida para la siguiente vuelta. Un criterio puramente elitista sólo acepta las soluciones que vayan mejorando la evaluación de la función de costos, este criterio favorece la intensificación. El otro extremo es la aceptación de todas las soluciones generadas, lo cual favorece la diversificación. También se encuentran puntos intermedios como la utilización de una temperatura como en Recocido Simulado de tal manera que se diversifique al principio de la corrida y se intensifique al final.
 
-Al momento de comparar tiempos de cómputo, la búsqueda aleatoria muestra el mejor desempeño entre los 3 con tiempos que nunca llegan al segundo inclusive para la instancia más grande de 256 localidades. Por su parte, los dos otros métodos muestran un desempeño similar en tiempo para instancias pequeñas y medianas y se evidencia una diferencia es a partir de instancias grandes como lipa70a, donde se torna a favor de la búsqueda local moviéndose por el primer mejor vecino. Por lo tanto, se evidencia que a partir de instancias de 70 localidades la búsqueda considerando el primer mejor vecino empieza a mostrar ventaja.
+Por último se encuentra el método usado en cada iteración para la producción de un óptimo local. Dicho método puede ser un búsqueda local sencilla u otra metaheurística como recocido simulado o búsqueda tabú. 
 
-La marcada diferencia en tiempos de ejecucición entre la búsqueda aleatoria y el resto se debe a que es menos costoso ir generando un par de números aleatorios en cada iteración a tener que recorrer el arreglo de la solución cambiando cada par posible de posiciones. Por su parte, la diferencia entre la búsqueda del mejor de la vecindad y el primer mejor viene dado porque en la primera se debe examinar toda la vecindad, mientras que en la segunda se examina parcialmente; esta diferencia es menos notoria cuando las instancias son pequeñas y medianas (menor a 70 localidades) ya que una vecindad, como se reseñó anteriormente tiene $n*(n+1)/2$ candidatos.
+Es a partir de la combinación de los 4 módulos vistos anteriormente que se entona ILS a los problemas para los cuales tiene que generar soluciones satisfactorias y en tiempos razonables. Para este trabajo se usó como solución inicial una generada aleatoriamente, como perturbación la operación 2-opt, la cual invierte la porción de la lista que está delimitada por 2 elementos escogidos aleatoriamente, el método interno usado es una búsqueda local común que va eligiendo la primera mejor solución de la vecindad que consiga y el criterio de aceptación es tomado de Recocido Simulado aceptando siempre mejores soluciones y con probabilidad $e^{\frac{-(f(s')-f(s))}{T}}$. Además se baja la temperatura después de 20 búsquedas locales que no mejoren la solución y se baja la temperatura a una tasa de 0.8*T, la temperatura inicial es 100000 y la final es 1000. En la figura \ref{alg4} el pseudocódigo.
 
-Tomando en consideración los errores relativos y los tiempos de cómputo se nota un mejor desempeño por la búsqueda local con el primer mejor sobre el resto al considerar que en las intancias grandes tarda menos en computar que una busqueda local considerando el mejor de la vecindad y que el error relativo es parecido y hasta mejor.
+\begin{algorithm}
+ \label{alg4}
+ \DontPrintSemicolon
+ \vspace*{0.1cm}
+ \KwIn{matrices con las distancias y flujos}
+ \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
+ S = S0 \tcc* {escogiendo S0 aleatoriamente}
+ T = 100000 \tcc* {temperatura inicial}
+ Tf = 1000  \tcc* {temperatura final}
+ sinMejoria = 0 \;
+ \While {T \textgreater Tf}{
+   \While {sinMejoria \textless 20}{
+     S* = localSearch(S)\;
+     \If {f(S*) \textless f(S)}{
+        S = S*\;
+        sinMejoria = 0 \;
+     }
+     \Else {S = S* con probabilidad $e^{\frac{-(f(s')-f(s))}{T}}$\;}
+     sinMejoria = sinMejoria +1 \;
+   }
+   T = T*0.8\;
+ }
+ \KwRet{S}
+ \vspace*{0.1cm}
+ \caption{Búsqueda Local Iterada}
+\end{algorithm}
 
-Ahora pasando a los resultados de la evaluación de las distintas metaheurísticas se presentan los resultados de la evaluación de la función de costos, el porcentaje de error relativo y los tiempos de ejecución en las tablas \ref{tabla4}, \ref{tabla5} y \ref{tabla6}.
+\subsection{Algoritmo Genético}
 
-Considerando primero las metaheurísticas de trayectoria se tiene que los porcentajes de error varían considerablemente entre instancias de distintos tamaños. Empezando con las instancias chr, se observa un contraste entre SA (Simmulated Anealing) y TS (Tabu Search); SA presenta 5\% y 12\% en las instancias chr12a y chr15a mientras que TS presenta 20\% y 38\%; en cambio, para chr20a, chr22a y chr25a SA muestra 98\%, 38\% y 180\%  mientras que SA muestra mejores resultados con 37\%, 15\% y 47\% respectivamente.
-Si tomamos en consideración un margen del 5\% como una respuesta aceptable sólo SA en chr12a alcanza esta meta, teniendo además una notable incapacidad por parte de SA de producir resultados satisfactorios en instancias como chr20a y chr25a.
+El concepto de algoritmo genético aparece por primera vez en "Adaptation in natural \& artificial systems" gracias a Holland, H. \cite{10}. La metaheurística está inspirada en la teoría evolutiva en la cual la descendencia que presente rasgos genotípicos que le permitan apatarse al entorno tiende a proliferar más y así pasar dichos rasgos a la siguiente generación. Un algoritmo genético parte de una población de soluciones llamadas cromosomas, aplica un criterio de selección para elegir aquellos que van a reproducirse, cruza las soluciones con algún método, aplica un criterio de reemplazo para determinar cuales cromosomas sobreviven en cada ciclo y uno para las mutaciones que se puedan dar dentro de la población. Luego de que se cumpla un criterio de parada determinado se reporta la mejor solución encontrada.
 
-Sin embargo esta incapacidad de producir respuestas aceptables y con un comportamiento errático entre los dos métodos para las instancias chr no se extiende al resto de las series. Si se observa las intancias nug y sko, observamos que TA sí logra conseguir resultados menores al 5\% de error y mejores que los resultados de SA, que se encuentran alrededor del 15\%. Por su parte instancias como los de la serie lipa y tai muestran que tanto SA como TS pueden dar buenos resultados. Acotándose que en lipa es preferible utilizar TS sobre SA por obtener resultados un poco mejor (mientras los resultados de SA rondan el 3\% de error, los de TS rondan el 1\%).
+La selección de la población inicial conlleva a elegir cuántos cromosomas van a conformarla; si son pocos los cromosomas podría no estarse explorando bien el espacio de soluciones con lo cual se restringe la búsqueda a pocos sectores, por otra parte, si son muchos los cromosomas se utiliza más tiempo de cómputo en cada iteración volviendo menos eficiente el algoritmo; por lo tanto una cantidad moderada es deseable y dicha cifra está sujeta a cada instancia con la que se prueba el algoritmo. 
 
-Ahora, ahondando en las instancias que presentaron el mejor y peor error para SA, tenemos la serie esc y la serie tai. En las tablas \ref{tabla7} y \ref{tabla8} se presentan la evaluación de la función objetivo y los porcentajes de error relativo praa SA y TS de las instacias Tai y en las tablas \ref{tabla9} y \ref{tabla10} para las instancias Esc.
+La población inicial suele elegirse aleatoriamente, sin embargo esta elección puede tener problemas al momento de intentar abarcar la mayor cantidad posible del espacio de soluciones; por lo tanto para algunos problemas se idea una forma más efectiva de elegir la población inicial con el objetivo de distanciar cada solución lo más posible; un ejemplo consiste en inciar la población para instancias de QAP con todas las permutaciones que contengan las distintas combinaciones de sucursales y localidades distintas.
 
-Observando las instancias Tai se muestra una ventaja por parte de SA sobre TS al ver que los resultados de SA no superan el 4\% mientras que los de TS se encuentran alrededor de 5\% con la instancia tai12a como peor resultado con 14\%. Por su parte, al evaluar las intancias Esc se tiene que para SA se obtienen errores altos, en especial en esc32a, esc32b y esc64a con 109\%, 105\% y 51\% mientras que TS presenta 24\%, 15\% y 2\%.
+La selección por su parte puede ser completamente elitista con un sistema de jerarquización en el cual se ordenan los cromosomas de peor a mejor resultado y la probabilidad de elegir un cromosoma en específico es $\alpha+\beta*k$ donde k es el índice del cromosoma en la lista ordenada; así se da mayor peso a los mejores resultados al momento de hacer la elección. Otro sistema utilizado es el torneo, en el cual se toma un número aleatorio de cromosomas y se elige el mejor de la muestra.
 
-Por otra parte, al evaluar los tiempos de cómputo se obtuvo una notable diferencia en tre SA y TS, principalmente en las instancias grandes. Para las instancias pequeñas (hasta 30 sucursales) los tiempos son parecidos, estando por debajo de los 10 segundos; pero a partir de ste36a TS supera los 15 segundos mientras que SA se mantiene por debajo de este límite hasta sko56. Una vez llegado a sko56 se marca aún más la diferencia al ver que SA computa en menos de 100 segundos hasta esc128 en el que tarda 130 segundos y TS aumenta progresivamente desde 100 a 1500 segundos. Cabe resaltar el tiempo utilizado para computar tai256c, en el cual SA tarda 587 segundos a diferencia de TS que toma 118953 segundos.
+En lo concerniente al cruce se tiene que el método a emplear es dependiente del problema a resolver. Por ejemplo, para problemas con strings binarios se tienen los "X point crossover", los cuales fijan X puntos en los dos padres y se va copiando las porciones entre los puntos de los dos padres de manera intercalada en los hijos. 
 
-Considerando el tiempo de cómputo y el error relativo TS muestra una clara ventaja sobre SA para las instancias probadas al obtener mejores resultados en tiempos comparables a SA; sin embargo SA es preferible en las intsancias grandes donde TS se tarda mucho más y la direfencia en errores no es más del 5\% como en el caso de tai256c, en el cual se produce resultados parecidos pero con una diferencia de horas en tiempo de cómputo.                              
+Otro ejemplo, utilizado en arreglos de permutaciones, es "Partially Mapped Crossover" (PMX) que consiste en elegir dos puntos con los cuales se establece una guía de intercambio entre los elementos que aparezcan entre dichos puntos para cada padre; esto es, si un gen X aparece entre los dos puntos en un padre y un gen Y aparece en la misma posición en el otro padre, entonces todas las apariciones de Y en el segundo padre son sustituidas por X y viceversa.
+
+Aparte de PMX se encuentra OX, también usado para soluciones que representan permutaciones; éste consiste en utilizar una máscara de bits con el cual se fijan en los hijos los elementos de los padres que coincidan en posición con los 1s y se va rellenando los elementos faltantes en el orden de aparición que tengan en el otro padre.
+
+El reemplazo puede ser generacional, en donde la progenie reemplaza a los padres excepto al mejor y así evitar que se pierda la posible solución final o puede ser bajo un criterio donde los hijos reemplazan a los padres si son mejores que éstos o a las peores soluciones de la población. Nótese que esta última opción es elitista y puede llegar a homogeneizar la población, convergiendo prematuramente a un óptimo local no deseado.
+
+En lo referente a la mutación se debe determinar la frecuencia con la que ocurre, qué cromosomas mutan y cuáles son los genes que cambian. El cambio de los genes en el cromosoma que muta debe ser tal que produzca una solución "cercana" a la original, si el problema puede ordenar los valores de los genes es recomendable elegir valores próximos para asegurar dicha cercanía.
+
+Finalmente la condición de parada puede ser un número estático de iteraciones, una cantidad de ciclos sin mejoría de la mejor solución o forzar la culminación cuando la diversidad de la población baje de cierto punto. Para este trabajo se utiliza una población inicial de 10 cromosomas para mantener los tiempos de cómputo competitivos con las metaheurísticas de trayctoria; como condición de parada 3000 iteraciones sin mejoría de la solución óptima encontrada; se usa el torneo de 3 cromosomas para la seleción de los individuos a reproducirse; el operador de cruce es OX eligiendo dos genes aleatoriamente; la mutación puede ocurrir en cada iteración con un 10\% de probabilidad sobre un número aleatorio de cromosomas de la población y se eligen 2 genes aleatoriamente para su intercambio y los hijos reemplazan a los padres si son mejores que ellos. En la figura  \ref{alg5} se muestra el pseudocódigo.
+
+\begin{algorithm}
+ \label{alg5}
+ \DontPrintSemicolon
+ \vspace*{0.1cm}
+ \KwIn{matrices con las distancias y flujos}
+ \KwOut{Arreglo con una permutación de las asignaciones de las localidades a las sucursales}
+ Se inicializa la población con 10 soluciones aleatorias \;
+ Se ordenan los cromosomas de mejor a peor solución \;
+ sinMejoria = 0 \;
+ \While {sinMejoria \textless 1000}{
+   Elegir 2 padres realizando un torneo de 3 cromosomas aleatorios por cada uno\;
+   Cruzar los padres con el operador OX \;
+   Elegir los 2 mejores entre los hijos y los padres y colocarlos en la población en la posición de los padres \;
+   \If {número aleatorio entre 0 y 1 \textless 0.10}{
+     Elegir aleatoriamente los cromosomas que van a mutar e intercambiar dos genes aleatoriamente \;
+   }
+   Reordenar la población con quicksort\;
+   sinMejoria = sinMejoria + 1\;
+ }
+ \KwRet{S}
+ \vspace*{0.1cm}
+ \caption{Algoritmo genético}
+\end{algorithm}
+
+\section{Resultados y análisis}
 
 \begin{table}
 \csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas búsquedas locales}\label{tabla1}\begin{adjustbox}{max width=\columnwidth},
@@ -189,51 +260,70 @@ after reading=\end{adjustbox}]{resultadosLocal.csv}
 \end{table}
 
 \begin{table}
-\csvautotabular[before reading=\caption{Porcentajes del error relativo de las distintas búsquedas locales}\label{tabla2}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{errorLocal.csv}
-\end{table}
-
-\begin{table}
-\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo en segundos de las distintas búsquedas locales}\label{tabla3}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{tiempoLocal.csv}
-\end{table}
-
-\begin{table}
-\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas metaheurísticas}\label{tabla4}\begin{adjustbox}{max width=\columnwidth},
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas metaheurísticas}\label{tabla2}\begin{adjustbox}{max width=\columnwidth},
 after reading=\end{adjustbox}]{resultados.csv}
 \end{table}
 
 \begin{table}
-\csvautotabular[before reading=\caption{Porcentajes del error relativo de las distintas metaheurísticas}\label{tabla5}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{errores.csv}
-\end{table}
-
-\begin{table}
-\csvautotabular[before reading=\caption{Resultados del tiempo de cómputo en segundos de las distintas metaheurísticas}\label{tabla6}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{tiempos.csv}
-\end{table}
-
-
-\begin{table}
-\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla7}\begin{adjustbox}{max width=\columnwidth},
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas metaheurísticas para las instancias Tai}\label{tabla3}\begin{adjustbox}{max width=\columnwidth},
 after reading=\end{adjustbox}]{resultadosTai.csv}
 \end{table}
 
 \begin{table}
-\csvautotabular[before reading=\caption{Porcentajes del error relativo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla8}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{erroresTai.csv}
-\end{table}
-
-\begin{table}
-\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las instancias Esc para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla9}\begin{adjustbox}{max width=\columnwidth},
+\csvautotabular[before reading=\caption{Resultados de la evaluación de la función objetivo de las distintas metaheurísticas para las instancias Esc}\label{tabla4}\begin{adjustbox}{max width=\columnwidth},
 after reading=\end{adjustbox}]{resultadosEsc.csv}
 \end{table}
 
-\begin{table}
-\csvautotabular[before reading=\caption{Porcentajes del error relativo de las instancias Tai para Simulated Annealing, Tabu Search y Iterated Local}\label{tabla10}\begin{adjustbox}{max width=\columnwidth},
-after reading=\end{adjustbox}]{erroresEsc.csv}
-\end{table}
+\begin{table*}[p]
+\csvautotabular[before reading=\caption{Porcentajes del error relativo y tiempo de cómputo en segundos de las distintas búsquedas locales}\label{tabla5}]{error&tiempoLocal.csv}
+\end{table*}  
 
+\begin{table*}[p]
+\csvautotabular[before reading=\caption{Porcentajes del error relativo y tiempo de cómputo en segundos de las distintas metaheurísticas}\label{tabla6}]{errores&tiempos.csv}
+\end{table*}             
+
+
+\begin{table*}[p]
+\csvautotabular[before reading=\caption{Porcentajes del error relativo y tiempo de cómputo en segundos de las distintas metaheurísticas para las instancias Tai}\label{tabla7}]{erroresTai.csv}
+\end{table*} 
+
+\begin{table*}[p]
+\csvautotabular[before reading=\caption{Porcentajes del error relativo y tiempo de cómputo en segundos de las distintas metaheurísticas para las instancias Esc}\label{tabla8}]{erroresEsc.csv}
+\end{table*} 
+
+Las tablas \ref{tabla1} y \ref{tabla5} muestran los resultados de la evaluación de la función objetivo, los porcentajes de error y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino) respectivamente.
+
+El error relativo muestra que la mayoría de las instancias seleccionadas para el experimento muestran una topología con pocas mesetas (puntos en los cuales se encuentran los óptimos locales), por lo que se puede aproximar a una buena solución (aquellas que están a no más de 5\% de error) con una búsqueda local que se enfoque en el mejor de la vecindad o el primer vecino que mejore. Sólo las instancias chr presentan errores mayores al 20\%.
+
+Con respecto al desempeño de los distintos tipos de búsqueda local, se muestra una notoria diferencia entre una búsqueda moviéndose por el mejor de la vecindad y por el primero que mejore la solución con respecto a una búsqueda aleatoria. Esta última presenta errores superiores al 15\% en la mayoria de sus instancias y con desempeños mediocres en las instancias chr y esc128, los cuales superan el 100\%.
+
+Comparando una búsqueda local que se mueve al mejor de la vecindad con una que se mueve al primero que mejore la solución, se muestra un mejor desempeño por parte de la segunda sobre la primera; en general se aprecia una diferencia de aproximadamente 2\% de error entre una y la otra, casos como chr15a muestran una acentuada diferencia con 10\% de error a favor de moverse al primer vecino que mejore la solución. Sin embargo hay casos como chr22a y esc128 que se inclinan a favor de una búsqueda basada en el mejor de la vecindad.
+
+Al momento de comparar tiempos de cómputo, la búsqueda aleatoria muestra el mejor desempeño entre los 3 con tiempos que nunca llegan al segundo inclusive para la instancia más grande de 256 localidades. Por su parte, los dos otros métodos muestran un desempeño similar en tiempo para instancias pequeñas y medianas y se evidencia una diferencia es a partir de instancias grandes como sko81, donde se torna a favor de la búsqueda local moviéndose por el primer mejor vecino. Por lo tanto, se evidencia que a partir de instancias de 81 localidades la búsqueda considerando el primer mejor vecino empieza a mostrar ventaja.
+
+La marcada diferencia en tiempos de ejecución entre la búsqueda aleatoria y el resto se debe a que es menos costoso ir generando un par de números aleatorios en cada iteración a tener que recorrer el arreglo de la solución cambiando cada par posible de posiciones. Por su parte, la diferencia entre la búsqueda del mejor de la vecindad y el primer mejor viene dado porque en la primera se debe examinar toda la vecindad, mientras que en la segunda se examina parcialmente; esta diferencia es menos notoria cuando las instancias son pequeñas y medianas (menor a 70 localidades) ya que una vecindad, como se reseñó anteriormente tiene $n*(n+1)/2$ candidatos.
+
+Tomando en consideración los errores relativos y los tiempos de cómputo se nota un mejor desempeño por la búsqueda local con el primer mejor sobre el resto al considerar que en las intancias grandes tarda menos en computar que una busqueda local considerando el mejor de la vecindad y que el error relativo es parecido y hasta mejor.
+
+Ahora pasando a los resultados de la evaluación de las distintas metaheurísticas se presentan los resultados de la evaluación de la función de costos, el porcentaje de error relativo y los tiempos de ejecución en las tablas \ref{tabla2}, \ref{tabla3}, \ref{tabla4}, \ref{tabla6}, \ref{tabla7}, \ref{tabla8}.
+
+Empezando con las metaheurísticas de trayectoria en general TS tuvo el mejor desempeño de las 3. Al revisar la tabla \ref{tabla6} se observa como en promedio TS tiene 7.7\% de error, mientras que ILS posee 19.88\% y SA 55.39 \%. Al desglosar estos resultados evaluando las instancias individuales se observa que TS tuvo errores relativos consistentes por debajo del 10\% en la mayoría de las instancias a excepción de che25a y esc128, los cuales presentan 29.48\% y 15.63\% respectivamente. Más aún, si se baja la cota a 5\% como margen de soluciones aceptables TS tiene 5 soluciones de 12 en esta categoría.
+
+Por su parte ILS presenta en promedio 19.88\% de error; al igual que TS tiene 5 soluciones con errores por debajo del 5\%, pero de resto presenta errores superiores al 10\%, siendo las instancias chr las que presentan un peor desempeño con chr25a como la peor con 61.67\% cuando TS devuelve resultados para esta instancia con 29.48\% de error en promedio. Finalmente SA presenta en promedio 55.39\% de error que es atribuible a los resultados de las instancias chr20a, chr25a y esc128; los cuales muestran errores de 98.39\%, 180.8\% y 245.31\%. Además el resto de las instancias muestran resultados superiores al 10\% con sólo la instancia chr12a por debajo del 5\%, posicionando así a SA como el peor de las 3 metaheurísticas para evaluar las instancias chr y sko en general. 
+
+Cabe destacar que los tiempos de cómputo a partir de la instancia sko42 se restringen a los tiempos obtenidos por SA de tal manera que se pueda comparar resultados obtenidos por los 3 métodos en tiempos similares. 
+
+Pasando a los resultados de la instancias de la serie Tai se encuentra un comportamiento similar por parte de TS donde sigue siendo el que presenta mejores resultados de los 3 con 1.59\% de error promedio, con una cota superior de 2.51\% obtenida de tai60a. Por su parte SA presenta un error promedio de 2.36\%, mostrando un buen desempeño en todas las instancias y siendo el peor resultado 3.3\% en tai60a. ILS en esta oportunidad figura de último con un error promedio de 5.28\%, presentando una diferencia notoria en general con respecto a los otros 2 métodos al observar que aparecen resultados por encima de 5\% de error y con un máximo de 8.55\% en chr12a.
+
+En esta oportunidad se vuelve a restringir los tiempos de cómputo de Tabu Search e ILS a partir de la instancia tai25a para comparar el desempeño de los algoritmos fijado a un tiempo; este tiempo es el que demora SA en culminar con las especificaciones dadas.
+
+Finalmente, al revisar los resultados de la serie Esc Tabu Search es de nuevo el mejor de los 3 con 3.15\% de error promedio, destacando que se obtuvo el óptimo en 7 instancias de 11 y la presencia de 2 instancias que superan el 10\%, éstas son esc32a y esc23b con 13.08\% y 17.86\%. Si se observa los resultados de ILS se tiene un 7.9\% de error promedio que es producto de los elevados errores obtenidos en esc16d, esc16e, esc32a y esc32b que se encuentran sobre 10\% y con esc32b presentando 31.54\%. De último se encuentra SA con 34.99\% de error promedio con especial énfasis en esc32a, esc32b y esc64a que presentan 117.69\%, 104.76\% y 74.14\% respectivamente; contrastanto fuertemente con los resultdados de instancias como esc16b y esc32e donde se consigue el óptimo global o esc16c que está por debajo del 5\%.
+
+En esta oportunidad se fijó el tiempo de cómputo para los algoritmos al obtenido por TS debido a que consiguió los óptimos globales y buenas solucioes para la mayoria de las instancias en menor tiempo que las otras dos metaheurísticas. Todas los esc16 y esc32 se limitaron a corridas de 2 segundos y esc64 a 10 segundos.
+
+Los resultados de Simulated Annealing se pueden explicar porque no se le dió suficiente tiempo para mejorar las soluciones encontradas. Como se demuestra en \cite{7} si se deja computando SA en un tiempo que tienda al infinito la solución converge al óptimo global. Otro factor que puede estar influyendo es la solución inicial que siendo aleatoria puede influir en el tiempo necesario para converger a una buena solución.
+
+Pasando a las metaheurísticas poblacionales...
 
 \section*{Conclusiones}
 
@@ -282,17 +372,36 @@ S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi.
 \newblock {\em Science}, 220(4598):671–680, 1983.
 
 \bibitem{8}
-F. Glover. 
+Glover, F. 
 \newblock Tabu search: Part I. 
 \newblock {\em ORSA Journal on Computing}, 1(3):190–206, 1989.
 
+\bibitem{9}
+Lourenço, H.
+\newblock Iterated Local Search
+\newblock {\em Kluwer's International Series}, 340-352, 2003.
+
+\bibitem{10}
+Holland, J.
+\newblock Adaptation in Natural and Artificial Systems 
+\newblock {\em University of Michigan Press}, Ann Arbor, Michigan, 1975.
+
+\bibitem{11}
+Karisch, S. 
+\newblock Nonlinear approaches for the quadratic assignment and graph partition problems.
+\newblock {\em Graz University of Technology}, Graz, Austria, 1995.
+
+\bibitem{12}
+Li, Y.
+\newblock Heuristic and exact algorithms for the quadratic assignment problem.
+\newblock {\em The Pennsylvania State University}, USA, 1992.
+
+\bibitem{13}
+Johnson, T.
+\newblock New linear programming-based solution procedures for the quadratic assignment problem
+\newblock {\em Clemson University}, Clemson, USA, 1992.
+
 
 \end{thebibliography}
-
-
-\newpage
-\section*{Apéndice}
-
-Bla.
 
 \end{document}
