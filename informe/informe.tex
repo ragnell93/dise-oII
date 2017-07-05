@@ -197,6 +197,7 @@ Es a partir de la combinación de los 4 módulos vistos anteriormente que se ent
         sinMejoria = 0 \;
      }
      \Else {S = S* con probabilidad $e^{\frac{-(f(s')-f(s))}{T}}$\;}
+     Elegir 2 puntos aleatorios y realizar 2-opt sobre S\;
      sinMejoria = sinMejoria +1 \;
    }
    T = T*0.8\;
@@ -321,7 +322,7 @@ Finalmente, al revisar los resultados de la serie Esc Tabu Search es de nuevo el
 
 En esta oportunidad se fijó el tiempo de cómputo para los algoritmos al obtenido por TS debido a que consiguió los óptimos globales y buenas solucioes para la mayoria de las instancias en menor tiempo que las otras dos metaheurísticas. Todas los esc16 y esc32 se limitaron a corridas de 2 segundos y esc64 a 10 segundos.
 
-Los resultados de Simulated Annealing se pueden explicar porque no se le dió suficiente tiempo para mejorar las soluciones encontradas. Como se demuestra en \cite{7} si se deja computando SA en un tiempo que tienda al infinito la solución converge al óptimo global. Otro factor que puede estar influyendo es la solución inicial que siendo aleatoria puede influir en el tiempo necesario para converger a una buena solución.
+Los resultados de Simulated Annealing se pueden explicar porque no se le dió suficiente tiempo para mejorar las soluciones encontradas. Como se demuestra en \cite{7} si se deja computando SA en un tiempo que tienda al infinito la solución converge al óptimo global. Otro factor que puede estar afcetando es la solución inicial que siendo aleatoria puede influir en el tiempo necesario para converger a una buena solución.
 
 Pasando a las metaheurísticas poblacionales...
 
