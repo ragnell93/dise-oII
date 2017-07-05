@@ -33,7 +33,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
 
     done = 0;
     std::signal(SIGALRM, game_over);
-    alarm(2); // permite que el la busqueda tabú se realice por cierto tiempo
+    alarm(200); // permite que el la busqueda tabú se realice por cierto tiempo
     
     vector<int> mejorSol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -44,7 +44,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     shuffle(mejorSol.begin(),mejorSol.end(), default_random_engine(seed)); //solución inicial para la búsqueda
 
-    int prim,seg,y;
+    int prim,seg,ter,cuar,y;
     vector<int> solActual(dim);
     solActual = mejorSol;
     vector<int> solAnterior(dim);
@@ -60,7 +60,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
     uniform_real_distribution<> disReal(0,1); //necesario para la aceptación de una peor solución
 
     while ((temp > tempFinal) & !done){
-        while ((sinMejorias < 20) & !done){
+        while ((sinMejorias < 1000) & !done){
             solAnterior = solActual;
             do{
                 mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
@@ -94,10 +94,22 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
             }
 
             prim = disInt(eng);
-            do{ // asegurarse que el segundo elemento sea distinto al primero
+            do{
                 seg = disInt(eng);
             }while(seg == prim);
+            do{ 
+                ter = disInt(eng);
+            }while((ter == prim) || (ter ==seg));
+            do{ 
+                cuar = disInt(eng);
+            }while((cuar == prim) || (cuar==seg) || (cuar==ter));
 
+            solAux = solActual;
+            solActual[prim] = solAux[seg];
+            solActual[seg] = solAux[prim];
+            solActual[ter] = solAux[cuar];
+            solActual[cuar] = solAux[ter];
+            /*
             solAux = solActual;
             if (prim < seg){
                 y = prim;
@@ -113,11 +125,11 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
                     y++;
                 }
             }
-
+            */
             sinMejorias++;
         }
         sinMejorias = 0;
-        temp = temp*0.80;
+        temp = temp*0.90;
     }
     pair <int,vector<int>> pairSol = make_pair (funCosto(dim,mejorSol,dist,flujo),mejorSol);
     return pairSol;

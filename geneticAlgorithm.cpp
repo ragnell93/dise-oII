@@ -11,7 +11,12 @@
 #include <random> //default_random_engine
 #include <chrono> //chrono::system_clock
 #include <cstdlib> // rand
+#include <unistd.h>
+#include <csignal>
 using namespace std;
+
+sig_atomic_t volatile done = 0;
+void game_over(int) { done = 1; }
 
 int partition(vector<pair<int,int>>* costos,int p,int r){
     int x = (*costos)[r].second;
@@ -60,6 +65,10 @@ int buscarLista(vector<int> lista, int elemento, int dim){
 
 pair<int,vector<int>>geneticAlgorithm(int tamPob,int dim, vector<int> dist, vector<int> flujo){
 
+    done = 0;
+    std::signal(SIGALRM, game_over);
+    alarm(200);
+
     vector<vector<int>> poblacion(tamPob, vector<int>(dim));
     vector<vector<int>> hijos(2, vector<int>(dim));
     vector<vector<int>> auxPob(tamPob, vector<int>(dim)); //Auxiliar para el reordenamiento de elementos
@@ -103,7 +112,7 @@ pair<int,vector<int>>geneticAlgorithm(int tamPob,int dim, vector<int> dist, vect
     mejorSol = poblacion[0];
     mejorCosto = funCosto(dim,mejorSol,dist,flujo);
 
-    while (sinMejoria < 3000){
+    while ((sinMejoria < 30000) && !done){
 
         for (int i= 0; i < 3; i++){
             /*torneo de 3 elementos,como estan ordenados 
@@ -240,7 +249,7 @@ int main (int argc, char* argv[]) {
             }
         }
 
-        pairSol = geneticAlgorithm(10,dim,loc,suc);
+        pairSol = geneticAlgorithm(50,dim,loc,suc);
         resultados[i] = pairSol.first;
         cout << pairSol.first << endl;
 
