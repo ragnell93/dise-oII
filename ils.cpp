@@ -33,7 +33,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
 
     done = 0;
     std::signal(SIGALRM, game_over);
-    alarm(200); // permite que el la busqueda tabú se realice por cierto tiempo
+    alarm(60); // permite que el la busqueda tabú se realice por cierto tiempo
     
     vector<int> mejorSol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -44,92 +44,64 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     shuffle(mejorSol.begin(),mejorSol.end(), default_random_engine(seed)); //solución inicial para la búsqueda
 
-    int prim,seg,ter,cuar,y;
+    int prim,seg,y;
     vector<int> solActual(dim);
     solActual = mejorSol;
-    vector<int> solAnterior(dim);
-    int mejorCosto = funCosto(dim,solActual,dist,flujo);
+    int mejorCostoActual = funCosto(dim,solActual,dist,flujo);
     int costoActual,mejorCostoAnterior,difCostos;
     vector<int> solAux(dim); //para realizar las pruebas con los vecinos
     int sinMejorias = 0;
-    int temp = 100000;
-    int tempFinal = 1000;
     random_device rd; // obtener un número aleatorio de hardware
     mt19937 eng(rd()); // semilla para el generador
     uniform_int_distribution<> disInt(0,dim-1); // rango permitido en el movivimiento
     uniform_real_distribution<> disReal(0,1); //necesario para la aceptación de una peor solución
 
-    while ((temp > tempFinal) & !done){
-        while ((sinMejorias < 1000) & !done){
-            solAnterior = solActual;
-            do{
-                mejorCostoAnterior = mejorCosto; // para determinar que se llegó a un óptimo local
-                for (int i = 0; i < dim; i++){
-                    for (int j = i+1; j < dim; j++){
-                        solAux = solActual;
-                        solAux[i] = solActual[j];
-                        solAux[j] = solActual[i]; //intercambiamos dos elementos
-                        /*Importante, hay que optimizar el cálculo del costo de los vecinos*/
-                        costoActual = funCosto(dim,solAux,dist,flujo);
-                        if (costoActual<mejorCosto){
-                            break;
-                        }
-                    }
-                    if (costoActual < mejorCosto){
-                        mejorCosto = costoActual; //se actualiza el mejor costo
-                        solActual = solAux; //se efectua el movimiento
-                        break; 
+    while (!done){
+        do{
+            mejorCostoAnterior = mejorCostoActual; // para determinar que se llegó a un óptimo local
+            for (int i = 0; i < dim; i++){
+                for (int j = i+1; j < dim; j++){
+                    solAux = solActual;
+                    solAux[i] = solActual[j];
+                    solAux[j] = solActual[i]; //intercambiamos dos elementos
+                    /*Importante, hay que optimizar el cálculo del costo de los vecinos*/
+                    costoActual = funCosto(dim,solAux,dist,flujo);
+                    if (costoActual<mejorCostoActual){
+                        break;
                     }
                 }
-            } while (mejorCosto < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
-
-            if (mejorCosto < funCosto(dim,mejorSol,dist,flujo)){
-                mejorSol = solActual;
-                sinMejorias = 0;
+                if (costoActual < mejorCostoActual){
+                    mejorCostoActual = costoActual; //se actualiza el mejor costo
+                    solActual = solAux; //se efectua el movimiento
+                    break; 
+                }
             }
+        } while (mejorCostoActual < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
 
-            difCostos = mejorCosto - funCosto(dim,solAnterior,dist,flujo);
-            if ((difCostos > 0) && (disReal(eng) > exp(-difCostos/temp))){
-                solActual = solAnterior; //rechaza la solucion y regresa a la anterior
-            }
+        if (mejorCostoActual < funCosto(dim,mejorSol,dist,flujo)){
+            mejorSol = solActual;
+            sinMejorias = 0;
+        }
 
+        for (int a = 0; a < dim/3; a++){
+            //perturbación de dim/3 elementos 
             prim = disInt(eng);
             do{
                 seg = disInt(eng);
             }while(seg == prim);
-            do{ 
-                ter = disInt(eng);
-            }while((ter == prim) || (ter ==seg));
-            do{ 
-                cuar = disInt(eng);
-            }while((cuar == prim) || (cuar==seg) || (cuar==ter));
 
             solAux = solActual;
             solActual[prim] = solAux[seg];
             solActual[seg] = solAux[prim];
-            solActual[ter] = solAux[cuar];
-            solActual[cuar] = solAux[ter];
-            /*
-            solAux = solActual;
-            if (prim < seg){
-                y = prim;
-                for (int x = seg; x >= prim; x--){
-                    solActual[y] = solAux[x]; //2-opt
-                    y++;
-                }
-            }
-            else {
-                y = seg;
-                for (int x = prim; x >= seg; x--){
-                    solActual[y] = solAux[x]; //2-opt
-                    y++;
-                }
-            }
-            */
-            sinMejorias++;
         }
-        sinMejorias = 0;
-        temp = temp*0.90;
+
+        //si se estanca reinicializa la búsqueda
+        if (sinMejorias > dim){
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            shuffle(solActual.begin(),solActual.end(), default_random_engine(seed)); 
+        }
+
+        sinMejorias++;
     }
     pair <int,vector<int>> pairSol = make_pair (funCosto(dim,mejorSol,dist,flujo),mejorSol);
     return pairSol;
