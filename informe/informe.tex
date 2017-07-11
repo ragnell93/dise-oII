@@ -22,7 +22,7 @@
 
 \title{Estudio comparativo entre metaheurísticas de trayectoria y metaheurísticas poblacionales aplicadas al Problema de Asignación Cuadratico}
 
-\author{Antonio Alvarez}
+\author{Antonio Álvarez}
 
 %------------------------------ Text -------------------------------------
 
@@ -259,7 +259,7 @@ Decidido las soluciones que se van a usar en la siguiente iteración se procede 
 
 Finalmente, si pasan S iteraciones sin actualizar la mejor solución encontrada se reinicializan las hormigas (dejando la mejor respuesta del grupo en una hormiga) además de la matriz de feromonas pero ahora tomando en cuenta la mejor solución encontrada hasta el momento.
 
-Los parámetros se fijaron en 10 hormigas porque en las pruebas de Taillard muestra que menos de 8 no es suficiente para que escapar de una convergencia prematura de las soluciones y más de 15 no mejora los resultados demorando además la ejecución del algoritmo; Q = 100 para la inicialización de la matriz de feromonas, R = n/3 donde n es el tamaño del problema para el número de intercambios, $\alpha_1 = 0.9$ en la tasa de evaporación y $\alpha_2 = 0.1$ en la tasa de reforzamiento y S = n/2 en el número de iteraciones sin mejorías. En la figura \ref{alg6} se muestra el pseudocódigo propuesto por Taillard. 
+Los parámetros se fijaron en 10 hormigas porque en las pruebas de Taillard muestra que menos de 8 no es suficiente para que escapar de una convergencia prematura de las soluciones y más de 15 no mejora los resultados demorando además la ejecución del algoritmo; Q = 100 para la inicialización de la matriz de feromonas, R = n/3 donde n es el tamaño del problema para el número de intercambios, $\alpha_1 = 0.9$ en la tasa de evaporación y $\alpha_2 = 0.1$ en la tasa de reforzamiento y S = n/2 en el número de iteraciones sin mejorías; el número de vueltas antes de detener el algoritmo fue 10 para las instancias menores de 70 localidades y 5 para las mayores de 70. En la figura \ref{alg6} se muestra el pseudocódigo propuesto por Taillard. 
 
 \begin{algorithm}
  \label{alg6}
@@ -340,35 +340,17 @@ after reading=\end{adjustbox}]{resultadosEsc.csv}
 \csvautotabular[before reading=\caption{Porcentajes del error relativo y tiempo de cómputo en segundos de las distintas metaheurísticas para las instancias Esc}\label{tabla8}]{erroresEsc.csv}
 \end{table*} 
 
-\begin{figure}
-\caption{Boxplot con los errores relativos de Recocido Simulado}
-\includegraphics[width=\linewidth]{box-plot-SA.png}    
+\begin{figure*}[p]
+\caption{Boxplot con los errores relativos de las distintas metaheurísticas}
+\includegraphics[width=\linewidth]{erroresTotales.png}    
 \label{fig1}
-\end{figure}
+\end{figure*}
 
-\begin{figure}
-\caption{Boxplot con los errores relativos de Búsqueda Tabú}
-\includegraphics[width=\linewidth]{box-plot-TS.png}    
+\begin{figure*}[p]
+\caption{Boxplot con los tiempos de Cómputo de las distintas metaheurísticas}
+\includegraphics[width=\linewidth]{tiemposTotales.png}    
 \label{fig2}
-\end{figure}
-
-\begin{figure}
-\caption{Boxplot con los errores relativos de Búsqueda Local Iterada}
-\includegraphics[width=\linewidth]{box-plot-ILS.png}    
-\label{fig3}
-\end{figure}
-
-\begin{figure}
-\caption{Boxplot con los errores relativos de Algoritmo Genético}
-\includegraphics[width=\linewidth]{box-plot-GA.png}    
-\label{fig4}
-\end{figure}
-
-\begin{figure}
-\caption{Boxplot con los errores relativos de Colonia de Hormigas Híbrida}
-\includegraphics[width=\linewidth]{box-plot-HAC.png}    
-\label{fig5}
-\end{figure}
+\end{figure*}
 
 Las tablas \ref{tabla1} y \ref{tabla5} muestran los resultados de la evaluación de la función objetivo, los porcentajes de error y tiempo de cómputo para las distintas variantes de búsqueda local (elección de la mejor solución dentro de la vecindad, primera solución que mejore la evaluación de la función de costo actual o elección aleatoria de un vecino) respectivamente.
 
@@ -404,7 +386,7 @@ Evaluando la metaheurística poblacional, el Algoritmo Genético, se obtienen pe
 
 Por su parte el híbrido de colonia de hormigas presenta los mejores resultados. En \ref{tabla6} se obtiene el más bajo de los promedios con 4.28\%; dando mejores soluciones a las instancias chr que el resto de las metaheurísticas. En la serie Tai \ref{tabla7} queda de segundo con un promedio de 1.91\% y en la serie Esc \ref{tabla8} queda de primero con un error promedio de 0.28; dando los óptimos globales para todas las instancias excepto esc32a para la cual obtiene 3.08\%. Sin embargo los tiempos requeridos por HAC son mucho mayores que el resto de las metahuerísticas producto de realizar búsquedas locales constantemente para la solución de cada hormiga, lo que hace que fuese imposible restringir la búsqueda a los tiempos de las otras metaheurísticas sin afectar fuertemente el desempeño del método; sólo en la serie Esc se pudo restringir a los tiempos presentados sin perder precisión.
 
-Al revisar los boxplots en las figuras \ref{fig1}, \ref{fig2}, \ref{fig3}, \ref{fig4} y \ref{fig5} se observa como SA es el más inestable de todos los métodos al poseer la mayor cantidad de "outliers", que además presentan la mayor distancia de separación con respecto a la mediana (el "outlier" más lejano está cerca de 250\% mientras que la mediana se encuentra alrededor del 10\%); ésta por su parte es de las más elevadas junto a la de GA. Estos resultados de SA se deben a los eleveados errores de las instancias chr y esc, lo cual muestra una imposibilidad para obtener respuestas satisfactorias de los problemas reales, mientras que para los problemas sintéticos de Tai se obtienen resultados razonables con un promedio de 2.41\%.
+Al revisar los boxplots en la figura \ref{fig1} se observa como SA es el más inestable de todos los métodos al poseer la mayor cantidad de "outliers", que además presentan la mayor distancia de separación con respecto a la mediana (el "outlier" más lejano está cerca de 250\% mientras que la mediana se encuentra alrededor del 10\%); ésta por su parte es de las más elevadas junto a la de GA. Estos resultados de SA se deben a los eleveados errores de las instancias chr y esc, lo cual muestra una imposibilidad para obtener respuestas satisfactorias de los problemas reales, mientras que para los problemas sintéticos de Tai se obtienen resultados razonables con un promedio de 2.41\%.
 
 Búsqueda Tabú por su parte se muestra como uno de los mejores métodos con una mediana de 2\% y 4 "outiers", siendo el mayor de alrededor de 30\%; muestra un buen desempeño tanto para los problemas reales como para los sintéticos y si se toma en cuenta el tiempo logra dichos resultados en menor tiempo que HAC. Los "outliers" representan problemas para los cuales las otras metaheurística a excepción de HAC tienen problemas con errores elevados como chr15a, chr20a, esc32a y esc32b.
 
@@ -429,7 +411,7 @@ Por otra parte la combinación de metaheurísticas es una propuesta atractiva si
 
 Es así como los resultados obtenidos evidencian una inclinación a obtener los mejores resultados si se combinan principios de las metaheurísticas de trayectoria con principios de las metaheurísticas poblacionales como lo es el caso de la Colonia de Hormigas Híbrida realizada por Taillard, la cual obtuvo los mejores resultados en general tanto para las instancias sintéticas como las reales que se probaron. Dando los óptimos globales a casi todas las instancias de la seria Esc y teniendo los mejores resultados para la serie Chr. Sin embargo los tiempos de cómputo pueden crecer notoriamente como se observa al comparar los tiempos de cómputo entre la Colonia de Hormigas y la búsqueda tabú. Lo que convierte a la búsqueda tabú como el segundo candidato a usar para resolver las instancias probadas en este trabajo si se necesita una respuesta no tan precisa en menor tiempo que el requerido por HAC. 
 
-Con lo anteriormente expuesto se concluye que la implementación utilizada de Recocido Simulado y Búsqueda Tabú son los peores métodos a usar para las instancias trabajadas debido a la sencillez de su planteamiento, su falta de incorporación de información referente al problema y poca flexibilidad en intensificación y diversificación respectivamente. Mientras que la Colonia de Hormigas Híbrida es la mejor opción de las estudiadas gracias a la incorporación de una búsqueda local que intensifica en base a las soluciones construidas por las hormigas y se mueve por el espacio eficientemente gracias a la matriz de feromonas. 
+Con lo anteriormente expuesto se concluye que la implementación utilizada de Recocido Simulado y Algoritmo Genético son los peores métodos a usar para las instancias trabajadas debido a la sencillez de su planteamiento, su falta de incorporación de información referente al problema y poca flexibilidad en intensificación y diversificación respectivamente. Mientras que la Colonia de Hormigas Híbrida es la mejor opción de las estudiadas gracias a la incorporación de una búsqueda local que intensifica en base a las soluciones construidas por las hormigas y se mueve por el espacio eficientemente gracias a la matriz de feromonas. 
 
 La recomendación principal que se deriva de este trabajo es probar las distintas combinaciones que se pueden obtener entre metaheurísticas de trayectoria y poblacionales; siempre moldeando las implementaciones al problema dado con información que pueda hacer más efectiva la búsqueda.
 

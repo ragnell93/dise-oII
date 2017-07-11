@@ -33,7 +33,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
 
     done = 0;
     std::signal(SIGALRM, game_over);
-    alarm(60); // permite que el la busqueda tabú se realice por cierto tiempo
+    alarm(100); // permite que el la busqueda tabú se realice por cierto tiempo
     
     vector<int> mejorSol(dim);
     //inicializamos el vector con las localidades ordenadas
@@ -56,7 +56,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
     uniform_int_distribution<> disInt(0,dim-1); // rango permitido en el movivimiento
     uniform_real_distribution<> disReal(0,1); //necesario para la aceptación de una peor solución
 
-    while (!done){
+    while ((sinMejorias < 100) && !done){
         do{
             mejorCostoAnterior = mejorCostoActual; // para determinar que se llegó a un óptimo local
             for (int i = 0; i < dim; i++){
@@ -76,7 +76,7 @@ pair <int,vector<int>> iteratedLocalSearch(int dim, vector<int> dist, vector<int
                     break; 
                 }
             }
-        } while (mejorCostoActual < mejorCostoAnterior); //se detiene cuando ya no hay mejoría
+        } while ((mejorCostoActual < mejorCostoAnterior) && !done); //se detiene cuando ya no hay mejoría
 
         if (mejorCostoActual < funCosto(dim,mejorSol,dist,flujo)){
             mejorSol = solActual;
